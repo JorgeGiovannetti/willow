@@ -1,2 +1,6 @@
-# Willlow-Compiler
-Compiler Design Course Project
+# willow
+An Object-Oriented programming language
+
+## Developed by
+Jorge Giovannetti \
+Mariafernanda Salas
