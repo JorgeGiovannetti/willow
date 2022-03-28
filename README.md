@@ -1,5 +1,5 @@
 # willow
-[![Build](https://github.com/JorgeGiovannetti/willow/actions/workflows/ci.yml/badge.svg)](https://github.com/JorgeGiovannetti/willow/actions/workflows/ci.yml)
+[![Build](https://github.com/JorgeGiovannetti/willow/actions/workflows/build.yml/badge.svg)](https://github.com/JorgeGiovannetti/willow/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 
