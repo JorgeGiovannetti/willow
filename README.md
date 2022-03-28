@@ -1,4 +1,7 @@
 # willow
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+
 An Object-Oriented programming language
 
 ## Developed by
