@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include <tao/pegtl.hpp>
 
 using namespace tao::pegtl;
