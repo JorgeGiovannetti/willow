@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include <tao/pegtl.hpp>
 #include "tokens.cpp"
 
@@ -52,13 +50,13 @@ struct termino
 {
 };
 
-struct exp
+struct _exp
     : seq<termino, star<seq<sor<t_plus, t_minus>, termino>>>
 {
 };
 
 struct expresion
-    : seq<exp, opt<seq<sor<t_greater, t_lesser, t_neq>, exp>>>
+    : seq<_exp, opt<seq<sor<t_greater, t_lesser, t_neq>, _exp>>>
 {
 };
 
