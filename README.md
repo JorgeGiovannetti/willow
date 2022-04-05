@@ -5,6 +5,22 @@
 
 An Object-Oriented programming language
 
+## Milestones
+
+- [ ] Lexical and Syntactic Analysis
+- [ ] Basic Variable Semantics: Procedure Directory and Symbol Table
+- [ ] Basic Variable Semantics: Semantic Considerations Table
+- [ ] Code Generation of Arithmetic Expressions and sequential Statements: Assignment, Input, etc.
+- [ ] Code Generation of Conditional Statements: Decisions/Loops
+- [ ] Code Generation of Functions
+- [ ] Runtime Memory Mapping for Virtual Machine
+- [ ] Virtual Machine: Arithmetic Expression and Sequential Statement Execution
+- [ ] Code Generation for Arrays/Structured Types
+- [ ] Virtual Machine: Conditional Statement Execution
+- [ ] Documentation (1st Draft)
+- [ ] Code Generation and Virtual Machine
+- [ ] Final Compiler and Documentation
+
 ## Developed by
 Jorge Giovannetti \
 Mariafernanda Salas
