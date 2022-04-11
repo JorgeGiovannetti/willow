@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 
-An Object-Oriented programming language
+A concise, statically typed, object-oriented programming language
 
 ## Milestones
 
@@ -21,15 +21,28 @@ An Object-Oriented programming language
 - [ ] Code Generation and Virtual Machine
 - [ ] Final Compiler and Documentation
 
-## Developed by
-Jorge Giovannetti \
-Mariafernanda Salas
-
 ## Requirements
 This project requires C++17, supporting the following compilers:
 * GCC >= 8.3.0
 * Clang >= 7.0.0
 * MSVC >= 14.16
+
+## Example
+The following code demonstrates a simple willow program:
+```rust
+fn main() {
+    myName: string = read(); 
+    write("Hello, " + myName + "!");
+    
+    x, y: int = 3, 5;
+    
+    write(x + y)
+}
+```
+
+## Developed by
+[Jorge Giovannetti](https://github.com/JorgeGiovannetti) \
+[Mariafernanda Salas](https://github.com/MariferSalas)
 
 ## License
 The project is available under the [MIT](https://opensource.org/licenses/MIT) license.
