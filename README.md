@@ -36,7 +36,7 @@ fn main() {
     
     x, y: int = 3, 5;
     
-    write(x + y)
+    write(x + y);
 }
 ```
 
