@@ -33,8 +33,8 @@ The following code demonstrates a simple willow program:
 fn main() {
     myName: string = read(); 
     write("Hello, " + myName + "!");
-    
-    x, y: int = 3, 5;
+    x: int = 3;
+    y: int = 5;
     
     write(x + y);
 }
