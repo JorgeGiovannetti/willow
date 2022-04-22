@@ -71,6 +71,11 @@ struct funcdef
 {
 };
 
+struct main_func
+    : seq<t_fn, t_main, t_paropen, t_parclose, block>
+{
+};
+
 struct func_call
     : seq<var, params>
 {
@@ -175,7 +180,7 @@ struct statement
 // Expressions
 
 struct expr_L1
-    : sor<seq<t_paropen, expr, t_parclose>, var, literal, func_call>
+    : sor<seq<t_paropen, expr, t_parclose>, var, literal, func_call, read_func_call>
 {
 };
 
@@ -227,6 +232,6 @@ struct block
 // Entry Point
 
 struct grammar_main
-    : must<sor<imports, seq<opt<imports>, plus<sor<funcdef, classdef, var_def>>>>>
+    : must<sor<imports, seq<opt<imports>, plus<sor<funcdef, classdef, var_def, main_func>>>>>
 {
 };
