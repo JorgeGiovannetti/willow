@@ -3,100 +3,90 @@
 
 using namespace tao::pegtl;
 
-struct tipo
-    : sor<t_int, t_float>
+// Imports
+
+struct imports
+    : seq<t_import, one<'('>, list<t_lit_string, t_comma>, one<')'>>
 {
 };
 
-struct vars2
-    : star<seq<t_comma, t_id>>
+struct block;
+struct expr;
+
+// Vars
+
+struct var
+    : seq<sor<t_id, t_this>, star<sor<seq<t_bracketopen, expr, t_bracketclose>, seq<t_dot, t_id>>>>
 {
 };
 
-struct vars1
-    : plus<seq<t_id, vars2, t_colon, tipo, t_semicolon>>
+struct var_def
+
+
+// Expressions
+
+
+
+// Loops
+
+struct while_loop
+    : seq<t_while, t_paropen, expr, t_parclose, block>
 {
 };
 
-struct vars
-    : seq<t_var, vars1>
+struct for_range
+    : seq<expr, t_rangedot, expr>
 {
 };
 
-struct var_cte
-    : sor<t_id, t_cte_i, t_cte_f>
+struct for_loop
+    : seq<t_for, t_paropen, s_var, t_arrow, for_range, t_parclose, block>
 {
 };
 
-struct factor1
-    : seq<opt<sor<t_plus, t_minus>>, var_cte>
+struct loops
+    : sor<while_loop, for_loop>
 {
 };
 
-struct expresion;
+// Statements
 
-struct factor
-    : sor<seq<t_paropen, expresion, t_parclose>, factor1>
+struct assignment
+    : seq<var, sor<t_assign, t_multassign, t_divassign, t_plusassign, t_minusassign, t_modassign>, expr>
 {
 };
 
-struct termino1
-    : star<seq<sor<t_mult, t_div>, factor>>
+struct break_stmt
+    : seq<t_break, t_semicolon>
 {
 };
 
-struct termino
-    : seq<factor, termino1>
+struct continue_stmt
+    : seq<t_continue, t_semicolon>
 {
 };
 
-struct _exp
-    : seq<termino, star<seq<sor<t_plus, t_minus>, termino>>>
+struct return_stmt
+    : seq<t_return, opt<expr>, t_semicolon>
 {
 };
 
-struct expresion
-    : seq<_exp, opt<seq<sor<t_greater, t_lesser, t_neq>, _exp>>>
+
+struct statement
+    : sor<var_def, expr, assignment, return_stmt, break_stmt, continue_stmt, funcs, conditional, loops, block>
 {
 };
 
-struct asignacion
-    : seq<t_id, t_eq, expresion, t_semicolon>
-{
-};
+// Block
 
-struct escritura2
-    : sor<expresion, t_cte_str>
+struct block
+    : seq<t_braceopen, star<statement>, t_braceclose>
 {
-};
+}; 
 
-struct escritura1
-    : seq<escritura2, opt<seq<t_comma, escritura2>>>
-{
-};
+// Entry Point
 
-struct escritura
-    : seq<t_print, t_paropen, escritura1, t_parclose, t_semicolon>
-{
-};
-
-struct bloque;
-
-struct condicion
-    : seq<t_if, t_paropen, expresion, t_parclose, bloque, opt<t_else, bloque>, t_semicolon>
-{
-};
-
-struct estatuto
-    : sor<asignacion, condicion, escritura>
-{
-};
-
-struct bloque
-    : seq<t_bracketopen, star<estatuto>, t_bracketclose>
-{
-};
-struct programa
-    : must<t_program, t_id, t_semicolon, opt<vars>, bloque>
+struct grammar_main
+    : must<opt<imports>, block>
 {
 };
