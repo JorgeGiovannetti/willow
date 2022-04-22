@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
    pegtl::file_input in(argv[1]);
 
    try {
-      pegtl::parse<programa>(in);
+      pegtl::parse<grammar_main>(in);
       std::cout << "Accepted!" << std::endl;
    }
    catch (const pegtl::parse_error& e) {

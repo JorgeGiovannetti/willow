@@ -3,100 +3,230 @@
 
 using namespace tao::pegtl;
 
-struct tipo
-    : sor<t_int, t_float>
+struct block;
+struct expr;
+
+// Imports
+
+struct imports
+    : seq<t_import, one<'('>, list<t_lit_string, t_comma>, one<')'>>
 {
 };
 
-struct vars2
-    : star<seq<t_comma, t_id>>
+// Type
+
+struct type
+    : seq<sor<t_int, t_float, t_bool, t_char, t_string, t_id>, star<seq<t_bracketopen, t_bracketclose>>>
 {
 };
 
-struct vars1
-    : plus<seq<t_id, vars2, t_colon, tipo, t_semicolon>>
+// Literals
+
+struct t_lit_arr
+    : seq<t_bracketopen, opt<list<expr, t_comma>>, t_bracketclose> 
 {
 };
 
-struct vars
-    : seq<t_var, vars1>
+struct literal
+    : sor<t_lit_int, t_lit_float, t_lit_bool, t_lit_char, t_lit_string, t_lit_arr>
 {
 };
 
-struct var_cte
-    : sor<t_id, t_cte_i, t_cte_f>
+// Vars
+
+struct var
+    : seq<sor<t_id, t_this>, star<sor<seq<t_bracketopen, expr, t_bracketclose>, seq<t_dot, t_id>>>>
 {
 };
 
-struct factor1
-    : seq<opt<sor<t_plus, t_minus>>, var_cte>
+struct s_var
+    : seq<t_id, t_colon, type>
 {
 };
 
-struct expresion;
-
-struct factor
-    : sor<seq<t_paropen, expresion, t_parclose>, factor1>
+struct var_def
+    : seq<s_var, opt<seq<t_assign, expr>>>
 {
 };
 
-struct termino1
-    : star<seq<sor<t_mult, t_div>, factor>>
+struct var_def_stmt
+    : seq<var_def, t_semicolon>
 {
 };
 
-struct termino
-    : seq<factor, termino1>
+// Functions
+
+struct params_def
+    : seq<t_paropen, opt<list<var_def, t_comma>>, t_parclose>
+{
+}; 
+
+struct params
+    : seq<t_paropen, opt<list<expr, t_comma>>, t_parclose>
 {
 };
 
-struct _exp
-    : seq<termino, star<seq<sor<t_plus, t_minus>, termino>>>
+struct funcdef
+    : seq<t_fn, t_id, params_def, opt<t_colon, type>, block>
 {
 };
 
-struct expresion
-    : seq<_exp, opt<seq<sor<t_greater, t_lesser, t_neq>, _exp>>>
+struct func_call
+    : seq<var, params>
 {
 };
 
-struct asignacion
-    : seq<t_id, t_eq, expresion, t_semicolon>
+struct read_func_call
+    : seq<t_read, t_paropen, t_parclose>
 {
 };
 
-struct escritura2
-    : sor<expresion, t_cte_str>
+struct write_func_call
+    : seq<t_write, params>
 {
 };
 
-struct escritura1
-    : seq<escritura2, opt<seq<t_comma, escritura2>>>
+struct super_func_call
+    : seq<t_super, params>
 {
 };
 
-struct escritura
-    : seq<t_print, t_paropen, escritura1, t_parclose, t_semicolon>
+struct funcs
+    : seq<sor<read_func_call, write_func_call, super_func_call, func_call>, t_semicolon>
 {
 };
 
-struct bloque;
+// Classes
 
-struct condicion
-    : seq<t_if, t_paropen, expresion, t_parclose, bloque, opt<t_else, bloque>, t_semicolon>
+struct constructor
+    : seq<t_id, params_def, block>
 {
 };
 
-struct estatuto
-    : sor<asignacion, condicion, escritura>
+struct attribute
+    : seq<sor<t_plus, t_minus>, sor<var_def_stmt, funcdef>>
 {
 };
 
-struct bloque
-    : seq<t_bracketopen, star<estatuto>, t_bracketclose>
+struct classdef
+    : seq<t_class, t_id, opt<seq<t_arrow, t_id>>, t_braceopen, plus<constructor>, plus<attribute>, t_paropen>
 {
 };
-struct programa
-    : must<t_program, t_id, t_semicolon, opt<vars>, bloque>
+
+
+// Conditionals
+
+struct conditional;
+
+struct conditional
+    : seq<t_if, t_paropen, expr, t_parclose, block, opt<t_else, sor<block, conditional>>>
+{
+};
+
+// Loops
+
+struct while_loop
+    : seq<t_while, t_paropen, expr, t_parclose, block>
+{
+};
+
+struct for_range
+    : seq<expr, t_rangedot, expr>
+{
+};
+
+struct for_loop
+    : seq<t_for, t_paropen, s_var, t_arrow, for_range, t_parclose, block>
+{
+};
+
+struct loops
+    : sor<while_loop, for_loop>
+{
+};
+
+// Statements
+
+struct assignment
+    : seq<var, sor<t_assign, t_multassign, t_divassign, t_plusassign, t_minusassign, t_modassign>, expr, t_semicolon>
+{
+};
+
+struct break_stmt
+    : seq<t_break, t_semicolon>
+{
+};
+
+struct continue_stmt
+    : seq<t_continue, t_semicolon>
+{
+};
+
+struct return_stmt
+    : seq<t_return, opt<expr>, t_semicolon>
+{
+};
+
+struct statement
+    : sor<var_def_stmt, expr, assignment, return_stmt, break_stmt, continue_stmt, funcs, conditional, loops, block>
+{
+};
+
+// Expressions
+
+struct expr_L1
+    : sor<seq<t_paropen, expr, t_parclose>, var, literal, func_call>
+{
+};
+
+
+struct expr_L2
+    : seq<opt<sor<t_minus, t_not>>, expr_L1>
+{
+};
+
+
+struct expr_L3
+    : seq<expr_L2, star<sor<t_mult, t_div, t_mod>, expr_L2>>
+{
+};
+
+
+struct expr_L4
+    : seq<expr_L3, star<sor<t_plus, t_minus>, expr_L3>>
+{
+};
+
+struct expr_L5
+    : seq<expr_L4, opt<sor<t_greater, t_lesser, t_geq, t_leq>, expr_L4>>
+{
+};
+
+struct expr_L6
+    : seq<expr_L5, star<sor<t_neq, t_eq>, expr_L5>>
+{
+};
+
+struct expr_L7
+    : seq<expr_L6, star<t_and, expr_L6>>
+{
+};
+
+struct expr
+    : seq<expr_L7, star<t_or, expr_L7>>
+{
+};
+
+// Block
+
+struct block
+    : seq<t_braceopen, star<statement>, t_braceclose>
+{
+}; 
+
+// Entry Point
+
+struct grammar_main
+    : must<sor<imports, seq<opt<imports>, plus<sor<funcdef, classdef, var_def>>>>>
 {
 };
