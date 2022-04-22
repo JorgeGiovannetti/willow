@@ -1,0 +1,80 @@
+import (
+    "a.wil",
+    "b.wil",
+    "c.wil"
+)
+ 
+# comentario simple
+ 
+#*
+    comentario
+    multilínea
+*#
+ 
+x: int = 5;
+ 
+y: int;
+ 
+fn mySum(a: int, b: int): int {
+    return a + b;
+}
+ 
+class Animal {
+    Animal(name: string) {
+        this.name = name;
+        this.age = 0;
+    }
+ 
+    - name: string; # private variable
+    + age: int;     # public variable
+    + fn getName(): string {
+        return this.name;
+    }
+}
+ 
+class Dog -> Animal {
+ 
+    Dog(name: string, color: string) {
+        super(name);
+ 
+        this.color = color;
+    }
+ 
+    + color: string;
+   
+    + fn bark() {
+        write("Woof");
+    }
+}
+ 
+fn main() {
+ 
+    myDog: Dog = Dog("Clifford");
+   
+    write(myDog.age); # outputs "0"
+    write(myDog.getName()); # outputs "Clifford"
+ 
+    myDog.age = 5;
+    y = read();
+ 
+    if(x > 5 or (y <= 3 and y >= 0)) {
+        y = y % 3;
+    } else if(x != 2) {
+        y = 7 * 4;
+    } else {
+        y = x + (4 / 2);
+    }
+ 
+    x = 3;
+ 
+    while(x > 0) {
+        myDog.bark(); # outputs "Woof"
+        x -= 1;
+    } 
+
+    for(i: int -> 1..5) {
+        write(i);
+    }
+ 
+    write(mySum(x, y));
+}
