@@ -7,7 +7,7 @@ A concise, statically typed, object-oriented programming language
 
 ## Milestones
 
-- [ ] Lexical and Syntactic Analysis
+- [x] Lexical and Syntactic Analysis
 - [ ] Basic Variable Semantics: Procedure Directory and Symbol Table
 - [ ] Basic Variable Semantics: Semantic Considerations Table
 - [ ] Code Generation of Arithmetic Expressions and Sequential Statements: Assignment, Input, etc.
