@@ -4,32 +4,57 @@
 #include <unordered_map>
 #include <string>
 
-#include "scope.hpp"
-
 using std::shared_ptr, std::unordered_map;
 
-namespace willow::symbols {
-    struct type {
+namespace willow::symbols 
+{
+
+    enum ScopeKind
+    {
+        GLOBAL,
+        LOCAL,
+        CLASS,
+        FUNCTION
+    };
+
+    struct Scope
+    {
+        uint16_t id;
+        ScopeKind kind;
+    };
+
+    struct Type
+    {
 
     };
-    
-    struct STData {
-        type type;
+
+    struct STData
+    {
+        Type type;
         std::string name;
     };
 
-    struct STNode {
+    struct STNode
+    {
         std::unordered_map<std::string, STData> data;
         std::shared_ptr<STNode> left, right, parent;
     };
 
-    class SymbolTable {
-        public:
-            STData lookup(type, Scope, std::string);
-            void insert(std::string, type);
-            void setScope(Scope);
-            void deleteScope(Scope);
-        private:
-            Scope currentScope;
+    class SymbolTable
+    {
+    public:
+        SymbolTable(SymbolTable const&) = delete;
+        SymbolTable& operator=(SymbolTable const&) = delete;
+
+        static std::shared_ptr<SymbolTable> instance();
+        STData lookup(Type, Scope, std::string);
+        void insert(std::string, Type);
+        void setScope(Scope);
+        void deleteScope(Scope);
+    private:
+        Scope currentScope;
+
+        SymbolTable();
+        static SymbolTable* mInstance;
     };
 }
