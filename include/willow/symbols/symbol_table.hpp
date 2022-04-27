@@ -44,11 +44,14 @@ namespace willow::symbols
 
         Symbol lookup(Type, std::string);
         void insert(std::string, Type);
+        void createScope(ScopeKind);
         void setScope(Scope);
         void deleteScope(Scope &);
 
     private:
         Scope currentScope;
+        uint16_t scopeCounter;
+        std::shared_ptr<Scope> globalScope;
 
         SymbolTable();
     };

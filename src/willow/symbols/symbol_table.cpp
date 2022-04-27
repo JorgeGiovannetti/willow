@@ -1,4 +1,6 @@
 #include <willow/symbols/symbol_table.hpp>
+
+#include <memory>
 #include <algorithm>
 
 namespace willow::symbols
@@ -6,6 +8,9 @@ namespace willow::symbols
 
     SymbolTable::SymbolTable()
     {
+        Scope global = {0, GLOBAL};
+        globalScope = std::make_shared<Scope>(global);
+        scopeCounter = 1;
     }
 
     std::shared_ptr<SymbolTable> SymbolTable::instance()
@@ -45,6 +50,31 @@ namespace willow::symbols
         }
 
         currentScope.symbols[id] = {type, id};
+    }
+
+    void SymbolTable::createScope(ScopeKind scopeKind)
+    {
+        if (scopeKind == GLOBAL)
+        {
+            throw "ERROR: CANNOT DEFINE A GLOBAL SCOPE"; // TODO: Create willow errors
+        }
+
+        Scope scope = {scopeCounter, scopeKind};
+        std::shared_ptr<Scope> targetParent;
+
+        if (scopeKind == LOCAL)
+        {
+            targetParent = std::make_shared<Scope>(currentScope);
+        }
+        else
+        {
+            targetParent = globalScope;
+        }
+
+        scope.parent = targetParent;
+        targetParent->children.push_back(std::make_shared<Scope>(scope));
+
+        scopeCounter++;
     }
 
     void SymbolTable::setScope(Scope scope)
