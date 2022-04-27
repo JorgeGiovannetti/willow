@@ -33,6 +33,9 @@ namespace willow::symbols
         std::unordered_map<std::string, Symbol> symbols;
         std::shared_ptr<Scope> parent;
         std::vector<std::shared_ptr<Scope>> children;
+        Scope(uint16_t id, ScopeKind k) : uid{id}, kind{k}
+        {
+        }
     };
 
     class SymbolTable
@@ -44,14 +47,14 @@ namespace willow::symbols
 
         Symbol lookup(Type, std::string);
         void insert(std::string, Type);
-        void createScope(ScopeKind);
-        void setScope(Scope);
-        void deleteScope(Scope &);
+        std::shared_ptr<Scope> createScope(ScopeKind);
+        void setScope(std::shared_ptr<Scope>);
+        void deleteScope(std::shared_ptr<Scope>);
 
     private:
-        Scope currentScope;
         uint16_t scopeCounter;
-        std::shared_ptr<Scope> globalScope;
+        std::shared_ptr<Scope> currentScope;
+        const std::shared_ptr<Scope> globalScope;
 
         SymbolTable();
     };
