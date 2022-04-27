@@ -2,11 +2,10 @@
 
 #include <memory>
 #include <unordered_map>
+#include <vector>
 #include <string>
 
-using std::shared_ptr, std::unordered_map;
-
-namespace willow::symbols 
+namespace willow::symbols
 {
 
     enum ScopeKind
@@ -17,44 +16,40 @@ namespace willow::symbols
         FUNCTION
     };
 
-    struct Scope
-    {
-        uint16_t id;
-        ScopeKind kind;
-    };
-
     struct Type
     {
-
     };
 
-    struct STData
+    struct Symbol
     {
         Type type;
-        std::string name;
+        std::string id;
     };
 
-    struct STNode
+    struct Scope
     {
-        std::unordered_map<std::string, STData> data;
-        std::shared_ptr<STNode> left, right, parent;
+        uint16_t uid;
+        ScopeKind kind;
+        std::unordered_map<std::string, Symbol> symbols;
+        std::shared_ptr<Scope> parent;
+        std::vector<std::shared_ptr<Scope>> children;
     };
 
     class SymbolTable
     {
     public:
-        SymbolTable(SymbolTable const&) = delete;
-        SymbolTable& operator=(SymbolTable const&) = delete;
-
+        SymbolTable(SymbolTable const &) = delete;
+        SymbolTable &operator=(SymbolTable const &) = delete;
         static std::shared_ptr<SymbolTable> instance();
-        STData lookup(Type, Scope, std::string);
+
+        Symbol lookup(Type, std::string);
         void insert(std::string, Type);
         void setScope(Scope);
-        void deleteScope(Scope);
+        void deleteScope(Scope &);
+
     private:
         Scope currentScope;
 
         SymbolTable();
-        static SymbolTable* mInstance;
     };
 }
