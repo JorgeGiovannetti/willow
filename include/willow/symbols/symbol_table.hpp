@@ -18,6 +18,7 @@ namespace willow::symbols
 
     struct Type
     {
+        std::string name;
     };
 
     struct Symbol
