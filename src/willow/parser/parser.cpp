@@ -1,10 +1,11 @@
 #include <iostream>
 #include <string>
 #include <tao/pegtl.hpp>
-#include "grammar.cpp"
+#include "actions.cpp"
 #include <willow/willow.hpp>
 
 namespace pegtl = tao::pegtl;
+using willow::symbols::SymbolTable;
 
 namespace willow::parser
 {
@@ -16,9 +17,11 @@ namespace willow::parser
     {
         pegtl::file_input in(filepath);
 
+        state st;
+
         try
         {
-            pegtl::parse<grammar_main>(in);
+            pegtl::parse<grammar_main, action>(in, st);
             std::cout << "Accepted!" << std::endl;
         }
         catch (const pegtl::parse_error &e)
