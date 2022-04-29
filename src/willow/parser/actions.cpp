@@ -47,7 +47,7 @@ namespace willow::parser
    };
 
    template <>
-   struct action<t_id>
+   struct action<identifier>
    {
       template <typename ActionInput>
       static void apply(const ActionInput &in, state &state)

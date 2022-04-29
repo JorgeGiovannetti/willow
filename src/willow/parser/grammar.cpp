@@ -9,6 +9,11 @@ namespace willow::parser
     struct block;
     struct expr;
 
+    struct identifier
+        : t_id
+    {
+    };
+
     // Imports
 
     struct imports
@@ -38,12 +43,12 @@ namespace willow::parser
     // Vars
 
     struct var
-        : seq<sor<t_id, t_this>, star<sor<seq<t_bracketopen, expr, t_bracketclose>, seq<t_dot, t_id>>>>
+        : seq<sor<identifier, t_this>, star<sor<seq<t_bracketopen, expr, t_bracketclose>, seq<t_dot, identifier>>>>
     {
     };
 
     struct s_var
-        : seq<t_id, t_colon, type>
+        : seq<identifier, t_colon, type>
     {
     };
 
@@ -70,7 +75,7 @@ namespace willow::parser
     };
 
     struct funcdef
-        : seq<t_fn, t_id, params_def, opt<t_colon, type>, block>
+        : seq<t_fn, identifier, params_def, opt<t_colon, type>, block>
     {
     };
 
@@ -107,7 +112,7 @@ namespace willow::parser
     // Classes
 
     struct constructor
-        : seq<t_id, params_def, block>
+        : seq<identifier, params_def, block>
     {
     };
 
@@ -117,7 +122,7 @@ namespace willow::parser
     };
 
     struct classdef
-        : seq<t_class, t_id, opt<seq<t_arrow, t_id>>, t_braceopen, plus<constructor>, plus<attribute>, t_paropen>
+        : seq<t_class, identifier, opt<seq<t_arrow, identifier>>, t_braceopen, plus<constructor>, plus<attribute>, t_paropen>
     {
     };
 
