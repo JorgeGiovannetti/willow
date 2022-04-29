@@ -83,6 +83,14 @@ namespace willow::symbols
         currentScope = scope;
     }
 
+    void SymbolTable::exitScope()
+    {
+        if (currentScope->kind != GLOBAL)
+        {
+            currentScope = currentScope->parent;
+        }
+    }
+
     void SymbolTable::deleteScope(std::shared_ptr<Scope> scope)
     {
         if (scope->kind == GLOBAL)

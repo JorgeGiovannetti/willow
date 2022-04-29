@@ -50,6 +50,7 @@ namespace willow::symbols
         void insert(std::string, Type);
         std::shared_ptr<Scope> createScope(ScopeKind);
         void setScope(std::shared_ptr<Scope>);
+        void exitScope();
         void deleteScope(std::shared_ptr<Scope>);
 
     private:

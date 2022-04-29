@@ -36,6 +36,17 @@ namespace willow::parser
    };
 
    template <>
+   struct action<t_braceclose>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, state &state)
+      {
+         std::cout << "Exiting scope" << std::endl;
+         state.st->exitScope();
+      }
+   };
+
+   template <>
    struct action<t_id>
    {
       template <typename ActionInput>
