@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include <stack>
 #include <tao/pegtl.hpp>
 #include <willow/willow.hpp>
 #include "grammar.cpp"
@@ -13,8 +14,8 @@ namespace willow::parser
 
    struct state
    {
-      std::string id_temp;
-      willow::symbols::Type type_temp;
+      std::stack<std::string> idStack;
+      std::stack<willow::symbols::Type> typeStack;
       willow::symbols::ScopeKind currScopeKind = willow::symbols::LOCAL;
       std::shared_ptr<SymbolTable> st = SymbolTable::instance();
    };
@@ -52,7 +53,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, state &state)
       {
-         state.id_temp = in.string();
+         state.idStack.push(in.string());
       }
    };
 
@@ -62,7 +63,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, state &state)
       {
-         state.type_temp.name = in.string();
+         state.typeStack.push({in.string()});
       }
    };
 
@@ -72,8 +73,8 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, state &state)
       {
-         std::cout << "Inserting id: " << state.id_temp << " with type: " << state.type_temp.name << std::endl;
-         state.st->insert(state.id_temp, state.type_temp);
+         std::cout << "Inserting id: " << state.idStack.top() << " with type: " << state.typeStack.top().name << std::endl;
+         state.st->insert(state.idStack.top(), state.typeStack.top());
       }
    };
 
