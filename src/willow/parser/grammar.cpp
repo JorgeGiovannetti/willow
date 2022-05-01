@@ -8,6 +8,17 @@ namespace willow::parser
 
     struct block;
     struct expr;
+    struct statement;
+
+    struct a_open_scope
+        : star<space>
+    {
+    };
+
+    struct block_noscopeopen
+        : seq<t_braceopen, star<statement>, t_braceclose>
+    {
+    };
 
     struct identifier
         : t_id
@@ -17,7 +28,7 @@ namespace willow::parser
     // Imports
 
     struct imports
-        : seq<t_import, one<'('>, list<t_lit_string, t_comma>, one<')'>>
+        : pad<seq<t_import, one<'('>, list<t_lit_string, t_comma>, one<')'>>, t_ignored>
     {
     };
 
@@ -75,7 +86,7 @@ namespace willow::parser
     };
 
     struct funcdef
-        : seq<t_fn, identifier, params_def, opt<t_colon, type>, block>
+        : seq<t_fn, identifier, a_open_scope, params_def, opt<t_colon, type>, block_noscopeopen>
     {
     };
 
@@ -122,7 +133,7 @@ namespace willow::parser
     };
 
     struct classdef
-        : seq<t_class, identifier, opt<seq<t_arrow, identifier>>, t_braceopen, plus<constructor>, plus<attribute>, t_paropen>
+        : seq<t_class, identifier, opt<seq<t_arrow, identifier>>, t_braceopen, a_open_scope, plus<constructor>, plus<attribute>, t_braceclose>
     {
     };
 
@@ -148,7 +159,7 @@ namespace willow::parser
     };
 
     struct for_loop
-        : seq<t_for, t_paropen, s_var, t_arrow, for_range, t_parclose, block>
+        : seq<t_for, t_paropen, a_open_scope, s_var, t_arrow, for_range, t_parclose, block_noscopeopen>
     {
     };
 
@@ -229,14 +240,14 @@ namespace willow::parser
     // Block
 
     struct block
-        : seq<t_braceopen, star<statement>, t_braceclose>
+        : seq<t_braceopen, a_open_scope, star<statement>, t_braceclose>
     {
     };
 
     // Entry Point
 
     struct grammar_main
-        : must<sor<imports, seq<opt<imports>, plus<sor<funcdef, classdef, var_def, main_func>>>>>
+        : must<sor<seq<opt<imports>, plus<pad<sor<var_def_stmt, funcdef, classdef, main_func>, t_ignored>>>, imports>, eof>
     {
     };
 }

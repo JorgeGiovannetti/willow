@@ -26,7 +26,7 @@ namespace willow::parser
    };
 
    template <>
-   struct action<t_braceopen>
+   struct action<a_open_scope>
    {
       template <typename ActionInput>
       static void apply(const ActionInput &in, state &state)
