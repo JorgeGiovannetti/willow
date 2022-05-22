@@ -18,7 +18,7 @@ namespace willow::symbols
         return s;
     }
 
-    Symbol SymbolTable::lookup(Type type, std::string id)
+    Symbol SymbolTable::lookup(std::string id)
     {
 
         if (currentScope->symbols.count(id))

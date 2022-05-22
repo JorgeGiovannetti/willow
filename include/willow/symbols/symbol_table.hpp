@@ -21,6 +21,8 @@ namespace willow::symbols
         std::string name;
     };
 
+    static const Type NONE_TYPE = {"none"};
+
     struct Symbol
     {
         Type type;
@@ -46,7 +48,7 @@ namespace willow::symbols
         SymbolTable &operator=(SymbolTable const &) = delete;
         static std::shared_ptr<SymbolTable> instance();
 
-        Symbol lookup(Type, std::string);
+        Symbol lookup(std::string);
         void insert(std::string, Type);
         std::shared_ptr<Scope> createScope(ScopeKind);
         void setScope(std::shared_ptr<Scope>);

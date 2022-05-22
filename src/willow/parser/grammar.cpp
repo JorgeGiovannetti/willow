@@ -58,8 +58,13 @@ namespace willow::parser
     {
     };
 
+    struct s_var_type
+        : seq<type>
+    {
+    };
+
     struct s_var
-        : seq<identifier, t_colon, type>
+        : seq<identifier, t_colon, s_var_type>
     {
     };
 
@@ -197,8 +202,18 @@ namespace willow::parser
 
     // Expressions
 
+    struct expr_paropen
+        : t_paropen
+    {
+    };
+
+    struct expr_parclose
+        : t_parclose
+    {
+    };
+
     struct expr_L1
-        : sor<seq<t_paropen, expr, t_parclose>, var, literal, func_call, read_func_call>
+        : sor<seq<expr_paropen, expr, expr_parclose>, var, literal, func_call, read_func_call>
     {
     };
 

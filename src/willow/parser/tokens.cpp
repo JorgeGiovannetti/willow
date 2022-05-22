@@ -344,7 +344,7 @@ namespace willow::parser
     };
 
     struct t_lit_char
-        : pad<seq<one<'\''>, until<one<'\''>>>, t_ignored>
+        : pad<seq<one<'\''>, any, one<'\''>>, t_ignored>
     {
     };
 
