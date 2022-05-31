@@ -2,24 +2,16 @@
 
 namespace willow::codegen
 {
-    Quadruple::Quadruple(std::string op, std::string address1, std::string address2, std::string address3) : addresses{address1, address2, address3}
+    Quadruple::Quadruple(std::string op, std::string address1, std::string address2, std::string targetAddress)
     {
         this->op = op;
-    }
-
-    Quadruple::Quadruple(std::string op, std::string address1, std::string address2) : addresses{address1, address2}
-    {
-        this->op = op;
+        this->address1 = address1;
+        this->address2 = address2;
+        this->targetAddress = targetAddress;
     }
 
     std::string Quadruple::to_string()
     {
-        std::string quadString = op;
-        for (const std::string &s : addresses)
-        {
-            quadString += "," + s;
-        }
-
-        return quadString;
+        return op + "," + address1 + "," + address2 + "," + targetAddress;
     }
 }
