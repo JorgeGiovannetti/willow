@@ -341,17 +341,6 @@ namespace willow::parser
       }
    };
 
-   template <>
-   struct action<t_lit_arr>
-   {
-      template <typename ActionInput>
-      static void apply(const ActionInput &in, state &state)
-      {
-         // TODO: Evaluate arrays
-         state.operandStack.push({in.string(), {"array"}});
-      }
-   };
-
    // Expressions
 
    template <>

@@ -4,301 +4,83 @@ using namespace tao::pegtl;
 
 namespace willow::parser
 {
-    // Ignored
+    // clang-format off
 
-    struct t_comment
-        : seq<one<'#'>, until<eolf>>
-    {
-    };
+    // Comments
 
-    struct t_multicomment
-        : seq<string<'#', '*'>, until<string<'*', '#'>>>
-    {
-    };
+    struct t_simplecomment : seq<one<'#'>, until<eolf>> {};
+    struct t_multicomment : seq<string<'#', '*'>, until<string<'*', '#'>>> {};
+    struct comment : disable<sor<t_multicomment, t_simplecomment>> {};
 
-    struct t_ignored
-        : sor<t_multicomment, t_comment, space>
-    {
-    };
+    // Separators (spaces/comments)
+
+    struct sep : sor<ascii::space, comment> {};
+    struct seps : star<sep> {};
+    struct sepp : plus<sep> {};
 
     // Punctuation
 
-    struct t_braceopen
-        : pad<one<'{'>, t_ignored>
-    {
-    };
-
-    struct t_braceclose
-        : pad<one<'}'>, t_ignored>
-    {
-    };
-
-    struct t_paropen
-        : pad<one<'('>, t_ignored>
-    {
-    };
-
-    struct t_parclose
-        : pad<one<')'>, t_ignored>
-    {
-    };
-
-    struct t_bracketopen
-        : pad<one<'['>, t_ignored>
-    {
-    };
-
-    struct t_bracketclose
-        : pad<one<']'>, t_ignored>
-    {
-    };
-
-    struct t_semicolon
-        : pad<one<';'>, t_ignored>
-    {
-    };
-
-    struct t_comma
-        : pad<one<','>, t_ignored>
-    {
-    };
-
-    struct t_dot
-        : pad<one<'.'>, t_ignored>
-    {
-    };
-
-    struct t_colon
-        : pad<one<':'>, t_ignored>
-    {
-    };
-
-    struct t_arrow
-        : pad<string<'-', '>'>, t_ignored>
-    {
-    };
-
-    struct t_rangedot
-        : pad<string<'.', '.'>, t_ignored>
-    {
-    };
+    struct t_braceopen : one<'{'> {};
+    struct t_braceclose : one<'}'> {};
+    struct t_paropen : one<'('> {};
+    struct t_parclose : one<')'> {};
+    struct t_bracketopen : one<'['> {};
+    struct t_bracketclose : one<']'> {};
+    struct t_semicolon : one<';'> {};
+    struct t_comma : one<','> {};
+    struct t_dot : one<'.'> {};
+    struct t_colon : one<':'> {};
+    struct t_arrow : string<'-', '>'> {};
+    struct t_rangedot : string<'.', '.'> {};
 
     // Operators
 
-    struct t_not
-        : pad<one<'!'>, t_ignored>
-    {
-    };
-
-    struct t_mult
-        : pad<one<'*'>, t_ignored>
-    {
-    };
-
-    struct t_div
-        : pad<one<'/'>, t_ignored>
-    {
-    };
-
-    struct t_mod
-        : pad<one<'%'>, t_ignored>
-    {
-    };
-
-    struct t_plus
-        : pad<one<'+'>, t_ignored>
-    {
-    };
-
-    struct t_minus
-        : pad<one<'-'>, t_ignored>
-    {
-    };
-
-    struct t_lesser
-        : pad<one<'<'>, t_ignored>
-    {
-    };
-
-    struct t_greater
-        : pad<one<'>'>, t_ignored>
-    {
-    };
-
-    struct t_leq
-        : pad<string<'<', '='>, t_ignored>
-    {
-    };
-
-    struct t_geq
-        : pad<string<'>', '='>, t_ignored>
-    {
-    };
-
-    struct t_eq
-        : pad<string<'=', '='>, t_ignored>
-    {
-    };
-
-    struct t_neq
-        : pad<string<'!', '='>, t_ignored>
-    {
-    };
-
-    struct t_and
-        : pad<string<'a', 'n', 'd'>, t_ignored>
-    {
-    };
-
-    struct t_or
-        : pad<string<'o', 'r'>, t_ignored>
-    {
-    };
-
-    struct t_assign
-        : pad<one<'='>, t_ignored>
-    {
-    };
-
-    struct t_multassign
-        : pad<string<'*', '='>, t_ignored>
-    {
-    };
-
-    struct t_divassign
-        : pad<string<'/', '='>, t_ignored>
-    {
-    };
-
-    struct t_modassign
-        : pad<string<'%', '='>, t_ignored>
-    {
-    };
-
-    struct t_plusassign
-        : pad<string<'+', '='>, t_ignored>
-    {
-    };
-
-    struct t_minusassign
-        : pad<string<'-', '='>, t_ignored>
-    {
-    };
+    struct t_not : one<'!'> {};
+    struct t_mult : one<'*'> {};
+    struct t_div : one<'/'> {};
+    struct t_mod : one<'%'> {};
+    struct t_plus : one<'+'> {};
+    struct t_minus : one<'-'> {};
+    struct t_lesser : one<'<'> {};
+    struct t_greater : one<'>'> {};
+    struct t_leq : string<'<', '='> {};
+    struct t_geq : string<'>', '='> {};
+    struct t_eq : string<'=', '='> {};
+    struct t_neq : string<'!', '='> {};
+    struct t_and : TAO_PEGTL_STRING("and") {};
+    struct t_or : TAO_PEGTL_STRING("or") {};
+    struct t_assign : one<'='> {};
+    struct t_multassign : string<'*', '='> {};
+    struct t_divassign : string<'/', '='> {};
+    struct t_modassign : string<'%', '='> {};
+    struct t_plusassign : string<'+', '='> {};
+    struct t_minusassign : string<'-', '='> {};
 
     // Reserved keywords
 
-    struct t_break
-        : pad<string<'b', 'r', 'e', 'a', 'k'>, t_ignored>
-    {
-    };
+    struct t_break : TAO_PEGTL_STRING("break") {};
+    struct t_class : TAO_PEGTL_STRING("class") {};
+    struct t_continue : TAO_PEGTL_STRING("continue") {};
+    struct t_bool : TAO_PEGTL_STRING("bool") {};
+    struct t_char : TAO_PEGTL_STRING("char") {};
+    struct t_else : TAO_PEGTL_STRING("else") {};
+    struct t_false : TAO_PEGTL_STRING("false") {};
+    struct t_float : TAO_PEGTL_STRING("float") {};
+    struct t_fn : TAO_PEGTL_STRING("fn") {};
+    struct t_for : TAO_PEGTL_STRING("for") {};
+    struct t_if : TAO_PEGTL_STRING("if") {};
+    struct t_import : TAO_PEGTL_STRING("import") {};
+    struct t_int : TAO_PEGTL_STRING("int") {};
+    struct t_main : TAO_PEGTL_STRING("main") {};
+    struct t_read : TAO_PEGTL_STRING("read") {};
+    struct t_return : TAO_PEGTL_STRING("return") {};
+    struct t_string : TAO_PEGTL_STRING("string") {};
+    struct t_this : TAO_PEGTL_STRING("this") {};
+    struct t_true : TAO_PEGTL_STRING("true") {};
+    struct t_while : TAO_PEGTL_STRING("while") {};
+    struct t_write : TAO_PEGTL_STRING("write") {};
 
-    struct t_class
-        : pad<string<'c', 'l', 'a', 's', 's'>, t_ignored>
-    {
-    };
-
-    struct t_continue
-        : pad<string<'c', 'o', 'n', 't', 'i', 'n', 'u', 'e'>, t_ignored>
-    {
-    };
-
-    struct t_bool
-        : pad<string<'b', 'o', 'o', 'l'>, t_ignored>
-    {
-    };
-
-    struct t_char
-        : pad<string<'c', 'h', 'a', 'r'>, t_ignored>
-    {
-    };
-
-    struct t_else
-        : pad<string<'e', 'l', 's', 'e'>, t_ignored>
-    {
-    };
-
-    struct t_false
-        : pad<string<'f', 'a', 'l', 's', 'e'>, t_ignored>
-    {
-    };
-
-    struct t_float
-        : pad<string<'f', 'l', 'o', 'a', 't'>, t_ignored>
-    {
-    };
-
-    struct t_fn
-        : pad<string<'f', 'n'>, t_ignored>
-    {
-    };
-
-    struct t_for
-        : pad<string<'f', 'o', 'r'>, t_ignored>
-    {
-    };
-
-    struct t_if
-        : pad<string<'i', 'f'>, t_ignored>
-    {
-    };
-
-    struct t_import
-        : pad<string<'i', 'm', 'p', 'o', 'r', 't'>, t_ignored>
-    {
-    };
-
-    struct t_int
-        : pad<string<'i', 'n', 't'>, t_ignored>
-    {
-    };
-
-    struct t_main
-        : pad<string<'m', 'a', 'i', 'n'>, t_ignored>
-    {
-    };
-
-    struct t_read
-        : pad<string<'r', 'e', 'a', 'd'>, t_ignored>
-    {
-    };
-
-    struct t_return
-        : pad<string<'r', 'e', 't', 'u', 'r', 'n'>, t_ignored>
-    {
-    };
-
-    struct t_super
-        : pad<string<'s', 'u', 'p', 'e', 'r'>, t_ignored>
-    {
-    };
-
-    struct t_string
-        : pad<string<'s', 't', 'r', 'i', 'n', 'g'>, t_ignored>
-    {
-    };
-
-    struct t_this
-        : pad<string<'t', 'h', 'i', 's'>, t_ignored>
-    {
-    };
-
-    struct t_true
-        : pad<string<'t', 'r', 'u', 'e'>, t_ignored>
-    {
-    };
-
-    struct t_while
-        : pad<string<'w', 'h', 'i', 'l', 'e'>, t_ignored>
-    {
-    };
-
-    struct t_write
-        : pad<string<'w', 'r', 'i', 't', 'e'>, t_ignored>
-    {
-    };
-
-    struct reserved
-        : sor<
+    struct reserved : sor<
               t_break,
               t_class,
               t_continue,
@@ -315,7 +97,6 @@ namespace willow::parser
               t_main,
               t_read,
               t_return,
-              t_super,
               t_string,
               t_this,
               t_true,
@@ -328,40 +109,16 @@ namespace willow::parser
 
     // Basic Type Literals
 
-    struct t_lit_int
-        : pad<plus<digit>, t_ignored>
-    {
-    };
-
-    struct t_lit_float
-        : pad<seq<plus<digit>, one<'.'>, plus<digit>>, t_ignored>
-    {
-    };
-
-    struct t_lit_bool
-        : pad<sor<t_true, t_false>, t_ignored>
-    {
-    };
-
-    struct t_lit_char
-        : pad<seq<one<'\''>, any, one<'\''>>, t_ignored>
-    {
-    };
-
-    struct t_lit_string
-        : pad<seq<one<'"'>, until<one<'"'>>>, t_ignored>
-    {
-    };
+    struct t_lit_int : plus<digit> {};
+    struct t_lit_float : seq<plus<digit>, one<'.'>, plus<digit>> {};
+    struct t_lit_bool : sor<t_true, t_false> {};
+    struct t_lit_char : seq<one<'\''>, any, one<'\''>> {};
+    struct t_lit_string : seq<one<'"'>, until<one<'"'>>> {};
 
     // Identifier
 
-    struct identifier_pattern
-        : seq<alpha, star<sor<alnum, one<'_'>>>>
-    {
-    };
+    struct identifier_pattern : seq<alpha, star<sor<alnum, one<'_'>>>> {};
+    struct t_id : minus<identifier_pattern, reserved> {};
 
-    struct t_id
-        : pad<minus<identifier_pattern, reserved>, t_ignored>
-    {
-    };
+    // clang-format on
 }
