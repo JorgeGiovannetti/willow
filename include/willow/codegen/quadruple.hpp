@@ -5,15 +5,12 @@
 
 namespace willow::codegen
 {
-    class Quadruple
+    struct Quadruple
     {
-    public:
-        Quadruple(std::string, std::string, std::string, std::string);
-        Quadruple(std::string, std::string, std::string);
-        std::string to_string();
-    
-    private:
         std::string op;
-        std::vector<std::string> addresses;
+        std::string address1;
+        std::string address2;
+        std::string targetAddress;
+        std::string to_string();
     };
 }
