@@ -17,12 +17,13 @@ namespace willow::parser
     {
         pegtl::file_input in(filepath);
 
-        state st;
+        State st = State();
 
         try
         {
-            pegtl::parse<grammar_main, action>(in, st);
+            pegtl::parse<grammar, action>(in, st);
             std::cout << "Accepted!" << std::endl;
+            st.displayQuadruples();
         }
         catch (const pegtl::parse_error &e)
         {

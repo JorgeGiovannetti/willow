@@ -1,5 +1,5 @@
 fn main() {
-    myName: string = read(); 
+    myName: string = "Gio"; 
     write("Hello, " + myName + "!");
     
     x: int = 3;
