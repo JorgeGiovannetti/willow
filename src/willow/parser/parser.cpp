@@ -1,6 +1,5 @@
 #include <iostream>
 #include <string>
-// #include <tao/pegtl/contrib/analyze.hpp>
 #include <tao/pegtl.hpp>
 #include "actions.cpp"
 #include <willow/willow.hpp>
@@ -18,14 +17,13 @@ namespace willow::parser
     {
         pegtl::file_input in(filepath);
 
-        state st;
+        State st = State();
 
         try
         {
-            // const std::size_t issues = pegtl::analyze<grammar>();
-            // std::cout << "Issues: " << issues << std::endl;
             pegtl::parse<grammar, action>(in, st);
             std::cout << "Accepted!" << std::endl;
+            st.displayQuadruples();
         }
         catch (const pegtl::parse_error &e)
         {
