@@ -20,28 +20,19 @@ fn mySum(a: int, b: int): int {
 }
  
 class Animal {
-    Animal(name: string) {
-        this.name = name;
-        this.age = 0;
-    }
- 
     - name: string; # private variable
     + age: int;     # public variable
     + fn getName(): string {
         return this.name;
     }
+    + fn setName(new_name: string) {
+        name = new_name;
+    }
 }
  
 class Dog -> Animal {
- 
-    Dog(name: string, color: string) {
-        super(name);
- 
-        this.color = color;
-    }
- 
     + color: string;
-   
+
     + fn bark() {
         write("Woof");
     }
@@ -49,7 +40,9 @@ class Dog -> Animal {
  
 fn main() {
  
-    myDog: Dog = Dog("Clifford");
+    myDog: Dog;
+    myDog.setName("Clifford");
+    
    
     write(myDog.age); # outputs "0"
     write(myDog.getName()); # outputs "Clifford"

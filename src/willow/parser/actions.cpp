@@ -515,4 +515,91 @@ namespace willow::parser
       }
    };
 
+   // For Loops
+
+   template <>
+   struct action<a1_for_range>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput& in, State& state)
+      {
+         operand op2 = state.operandStack.top();
+         state.operandStack.pop();
+         operand op1 = state.operandStack.top();
+         state.operandStack.pop();
+
+         if (op1.type.name != "int" || op2.type.name != "int")
+         {
+            throw "Error: Expected int in for-loop range";
+         }
+
+         state.operandStack.push(op1);
+         state.operandStack.push(op2);
+      }
+   };
+
+   template <>
+   struct action<a1_for_loop>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput& in, State& state)
+      {
+         operand loop_iterator = state.operandStack.top();
+
+         if (loop_iterator.type.name != "int")
+         {
+            throw "Error: Non-int iterators are not (yet) supported.";
+         }
+      }
+   };
+
+   template <>
+   struct action<a2_for_loop>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput& in, State& state)
+      {
+         operand range_to = state.operandStack.top();
+         state.operandStack.pop();
+         operand range_from = state.operandStack.top();
+         state.operandStack.pop();
+         operand loop_iterator = state.operandStack.top();
+
+         state.quadruples.push_back({ "=", range_from.id, "", loop_iterator.id });
+
+         state.jumpStack.push(state.quadruples.size());
+
+         std::string tempVar = "t" + std::to_string(state.tempCounter++);
+         state.quadruples.push_back({ "<", loop_iterator.id, range_to.id, tempVar });
+         state.quadruples.push_back({ "GOTOF", tempVar, "", "" });
+         state.jumpStack.push(state.quadruples.size() - 1);
+      }
+   };
+
+   template <>
+   struct action<a3_for_loop>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput& in, State& state)
+      {
+         operand loop_iterator = state.operandStack.top();
+         state.operandStack.pop();
+
+         std::string tempVar1 = "t" + std::to_string(state.tempCounter++);
+         state.quadruples.push_back({ "+", loop_iterator.id, "1", tempVar1 }); // TODO: Check how to display constants in quads
+         state.quadruples.push_back({ "=", tempVar1, "", loop_iterator.id });
+         state.jumpStack.push(state.quadruples.size() - 1);
+
+         size_t for_jump = state.jumpStack.top();
+         state.jumpStack.pop();
+
+         state.quadruples.push_back({ "GOTO", "", "", std::to_string(for_jump) });
+
+         size_t for_false_jump = state.jumpStack.top();
+         state.jumpStack.pop();
+         state.quadruples[for_jump].targetAddress = std::to_string(state.quadruples.size());
+
+      }
+   };
+
 }

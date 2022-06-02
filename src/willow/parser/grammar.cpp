@@ -75,8 +75,13 @@ namespace willow::parser
     struct a3_while_loop : seps {};
     struct while_loop : seq<t_while, seps, t_paropen, a1_while_loop, expr, seps, t_parclose, a2_while_loop, block, a3_while_loop> {};
     
-    struct for_range : seq<expr, t_rangedot, expr> {};
-    struct for_loop : seq<t_for, seps, t_paropen, a_open_scope, seps, s_var, seps, t_arrow, seps, for_range, seps, t_parclose, seps, block_noscopeopen> {};
+    struct a1_for_range : seps {};
+    struct for_range : seq<expr, t_rangedot, expr, a1_for_range> {};
+    
+    struct a1_for_loop : seps {};
+    struct a2_for_loop : seps {};
+    struct a3_for_loop : seps {};
+    struct for_loop : seq<t_for, seps, t_paropen, a_open_scope, seps, s_var, a1_for_loop, t_arrow, seps, for_range, a2_for_loop, t_parclose, seps, block_noscopeopen, a3_for_loop> {};
     struct loops : sor<while_loop, for_loop> {};
 
     // Statements
