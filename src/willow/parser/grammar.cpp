@@ -63,11 +63,18 @@ namespace willow::parser
     // Conditionals
 
     struct conditional;
-    struct conditional : seq<t_if, seps, t_paropen, seps, expr, seps, t_parclose, seps, block, seps, opt<t_else, seps, sor<block, conditional>, seps>> {};
+    struct a1_conditional : seps {};
+    struct a2_conditional : seps {};
+    struct a3_conditional : seps {};
+    struct conditional : seq<t_if, seps, t_paropen, seps, expr, seps, t_parclose, a1_conditional, block, opt<t_else, a3_conditional, sor<block, conditional>, seps>, a2_conditional> {};
 
     // Loops
 
-    struct while_loop : seq<t_while, seps, t_paropen, seps, expr, seps, t_parclose, seps, block> {};
+    struct a1_while_loop : seps {};
+    struct a2_while_loop : seps {};
+    struct a3_while_loop : seps {};
+    struct while_loop : seq<t_while, seps, t_paropen, a1_while_loop, expr, seps, t_parclose, a2_while_loop, block, a3_while_loop> {};
+    
     struct for_range : seq<expr, t_rangedot, expr> {};
     struct for_loop : seq<t_for, seps, t_paropen, a_open_scope, seps, s_var, seps, t_arrow, seps, for_range, seps, t_parclose, seps, block_noscopeopen> {};
     struct loops : sor<while_loop, for_loop> {};
@@ -103,7 +110,7 @@ namespace willow::parser
     // Entry Point
 
     struct top_levels : sor<var_def_stmt, funcdef, classdef, main_func> {};
-    struct grammar : must<seps, if_must_else<imports, star<top_levels, seps>, plus<top_levels, seps>>, eof> {};
+    struct grammar : must<seps, sor<seq<imports, star<top_levels, seps>>, plus<top_levels, seps>>, eof> {};
 
     // clang-format on
 }
