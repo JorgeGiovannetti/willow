@@ -21,7 +21,7 @@ namespace willow::parser
 
         try
         {
-            pegtl::parse<grammar, action>(in, st);
+            pegtl::parse<main_grammar>(in, st);
             std::cout << "Accepted!" << std::endl;
             st.displayQuadruples();
         }

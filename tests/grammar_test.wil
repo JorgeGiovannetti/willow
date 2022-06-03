@@ -1,0 +1,15 @@
+class Animal {
+    - name: string; # private variable
+    + age: int;     # public variable
+    + fn getName(): string {
+        return this.name;
+    }
+    + fn setName(new_name: string) {
+        name = new_name;
+    }
+}
+
+fn main() {
+    
+}
+ 

@@ -118,7 +118,7 @@ namespace willow::parser
     // Identifier
 
     struct identifier_pattern : seq<alpha, star<sor<alnum, one<'_'>>>> {};
-    struct t_id : minus<identifier_pattern, reserved> {};
+    struct t_id : seq<not_at<reserved>, identifier_pattern> {};
 
     // clang-format on
 }

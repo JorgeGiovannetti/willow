@@ -13,13 +13,13 @@ namespace willow::parser
     struct statement;
 
     struct a_open_scope : seps {};
-    struct block_noscopeopen : seq<t_braceopen, star<statement>, t_braceclose> {};
+    struct block_noscopeopen : seq<t_braceopen, seps, star<statement>, t_braceclose> {};
 
     struct identifier : t_id {};
     
     // Imports
 
-    struct imports : seq<t_import, seps, one<'('>, seps, t_lit_string, seps, star<t_comma, seps>, one<')'>, seps> {};
+    struct imports : seq<t_import, seps, one<'('>, seps, t_lit_string, seps, star<t_comma, seps, t_lit_string, seps>, one<')'>, seps> {};
 
     // Type
 
@@ -44,7 +44,7 @@ namespace willow::parser
 
     struct params_def : seq<t_paropen, seps, opt<s_var_basic, star<seps, t_comma, seps, s_var_basic>, seps>, t_parclose> {};
     struct params : seq<t_paropen, seps, opt<expr, star<seps, t_comma, seps, expr>, seps>, t_parclose> {};
-    struct funcdef : seq<t_fn, seps, identifier, a_open_scope, seps, params_def, seps, opt<t_colon, seps, type>, seps, block_noscopeopen> {};
+    struct funcdef : if_must<t_fn, seps, identifier, a_open_scope, params_def, seps, opt<t_colon, seps, type>, seps, block_noscopeopen> {};
     struct main_func : seq<t_fn, sepp, t_main, seps, t_paropen, seps, t_parclose, seps, block> {};
     struct func_call : seq<var, params> {};
     struct read_func_call : seq<t_read, t_paropen, t_parclose> {};
@@ -53,12 +53,12 @@ namespace willow::parser
 
     // Classes
 
-    struct memberaccess : sor<t_plus, t_minus> {};
+    struct memberaccess : sor<one<'+'>, one<'-'>> {};
     struct classattr : seq<memberaccess, seps, var_def_stmt> {};
     struct classmethod : seq<memberaccess, seps, funcdef> {};
     struct classmembers : seq<star<classattr, seps>, star<classmethod, seps>> {};
 
-    struct classdef : seq<t_class, sepp, identifier, seps, opt<t_arrow, seps, identifier, seps>, t_braceopen, a_open_scope, seps, classmembers, seps, t_braceclose> {};
+    struct classdef : if_must<t_class, sepp, identifier, seps, opt<t_arrow, seps, identifier, seps>, t_braceopen, a_open_scope, classmembers, t_braceclose> {};
 
     // Conditionals
 
@@ -73,7 +73,7 @@ namespace willow::parser
     struct a1_while_loop : seps {};
     struct a2_while_loop : seps {};
     struct a3_while_loop : seps {};
-    struct while_loop : seq<t_while, seps, t_paropen, a1_while_loop, expr, seps, t_parclose, a2_while_loop, block, a3_while_loop> {};
+    struct while_loop : if_must<t_while, seps, t_paropen, a1_while_loop, expr, seps, t_parclose, a2_while_loop, block, a3_while_loop> {};
     
     struct a1_for_range : seps {};
     struct for_range : seq<expr, t_rangedot, expr, a1_for_range> {};
@@ -81,16 +81,17 @@ namespace willow::parser
     struct a1_for_loop : seps {};
     struct a2_for_loop : seps {};
     struct a3_for_loop : seps {};
-    struct for_loop : seq<t_for, seps, t_paropen, a_open_scope, seps, s_var, a1_for_loop, t_arrow, seps, for_range, a2_for_loop, t_parclose, seps, block_noscopeopen, a3_for_loop> {};
+    struct for_loop : if_must<t_for, seps, t_paropen, a_open_scope, seps, s_var, a1_for_loop, t_arrow, seps, for_range, a2_for_loop, t_parclose, seps, block_noscopeopen, a3_for_loop> {};
     struct loops : sor<while_loop, for_loop> {};
 
     // Statements
 
-    struct assignment : seq<var, sor<t_assign, t_multassign, t_divassign, t_plusassign, t_minusassign, t_modassign>, expr, seps, t_semicolon> {};
+    struct assignment_operators : sor<t_assign, t_multassign, t_divassign, t_plusassign, t_minusassign, t_modassign> {};
+    struct assignment : seq<var, seps, assignment_operators, seps, expr, seps, t_semicolon> {};
 
     struct break_stmt : seq<t_break, seps, t_semicolon> {};
     struct continue_stmt : seq<t_continue, seps, t_semicolon> {};
-    struct return_stmt : seq<t_return, sepp, opt<expr>, seps, t_semicolon> {};
+    struct return_stmt : if_must<t_return, sepp, opt<expr>, seps, t_semicolon> {};
 
     struct statement : seq<sor<var_def_stmt, expr, assignment, return_stmt, break_stmt, continue_stmt, funcs, conditional, loops, block>, seps> {};
 
@@ -114,8 +115,8 @@ namespace willow::parser
 
     // Entry Point
 
-    struct top_levels : sor<var_def_stmt, funcdef, classdef, main_func> {};
-    struct grammar : must<seps, sor<seq<imports, star<top_levels, seps>>, plus<top_levels, seps>>, eof> {};
+    struct top_levels : sor<var_def_stmt, main_func, funcdef, classdef> {};
+    struct main_grammar : must<seps, sor<seq<imports, star<top_levels, seps>>, plus<top_levels, seps>>, seps, eof> {};
 
     // clang-format on
 }
