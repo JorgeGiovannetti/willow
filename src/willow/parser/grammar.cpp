@@ -42,13 +42,13 @@ namespace willow::parser
 
     // Functions
 
-    struct params_def : seq<t_paropen, seps, opt<s_var_basic, star<seps, t_comma, seps, s_var_basic>, seps>, t_parclose> {};
+    struct params_def : if_must<t_paropen, seps, opt<s_var_basic, seps, star<t_comma, seps, s_var_basic, seps>>, t_parclose> {};
     struct params : seq<t_paropen, seps, opt<expr, star<seps, t_comma, seps, expr>, seps>, t_parclose> {};
-    struct funcdef : if_must<t_fn, seps, identifier, a_open_scope, params_def, seps, opt<t_colon, seps, type>, seps, block_noscopeopen> {};
-    struct main_func : seq<t_fn, sepp, t_main, seps, t_paropen, seps, t_parclose, seps, block> {};
+    struct funcdef : if_must<t_fn, sepp, identifier, a_open_scope, params_def, seps, opt<t_colon, seps, type>, seps, block_noscopeopen> {};
+    struct main_func : seq<t_fn, sepp, if_must<t_main, seps, t_paropen, seps, t_parclose, seps, block>> {};
     struct func_call : seq<var, params> {};
-    struct read_func_call : seq<t_read, t_paropen, t_parclose> {};
-    struct write_func_call : seq<t_write, params> {};
+    struct read_func_call : if_must<t_read, t_paropen, t_parclose> {};
+    struct write_func_call : if_must<t_write, params> {};
     struct funcs : seq<sor<read_func_call, write_func_call, func_call>, t_semicolon> {};
 
     // Classes
@@ -87,13 +87,13 @@ namespace willow::parser
     // Statements
 
     struct assignment_operators : sor<t_assign, t_multassign, t_divassign, t_plusassign, t_minusassign, t_modassign> {};
-    struct assignment : seq<var, seps, assignment_operators, seps, expr, seps, t_semicolon> {};
+    struct assignment : seq<var, seps, if_must<assignment_operators, seps, expr, seps, t_semicolon>> {};
 
     struct break_stmt : seq<t_break, seps, t_semicolon> {};
     struct continue_stmt : seq<t_continue, seps, t_semicolon> {};
     struct return_stmt : if_must<t_return, sepp, opt<expr>, seps, t_semicolon> {};
 
-    struct statement : seq<sor<var_def_stmt, expr, assignment, return_stmt, break_stmt, continue_stmt, funcs, conditional, loops, block>, seps> {};
+    struct statement : seq<sor<var_def_stmt, assignment, return_stmt, break_stmt, continue_stmt, funcs, conditional, loops, block>, seps> {};
 
     // Expressions
 
