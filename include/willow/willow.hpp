@@ -3,6 +3,7 @@
 
 #include "symbols/symbol_table.hpp"
 #include "codegen/quadruple.hpp"
+#include "parser/parser.hpp"
 #include "parser/state.hpp"
 
 #endif

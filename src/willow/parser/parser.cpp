@@ -9,7 +9,11 @@ using willow::symbols::SymbolTable;
 
 namespace willow::parser
 {
-    void parse(const std::string &filepath)
+    Parser::Parser()
+    {
+    }
+
+    void Parser::parse(const std::string &filepath)
     {
         pegtl::file_input in(filepath);
 

@@ -1,9 +1,10 @@
 #include <iostream>
 
 #include <tao/pegtl.hpp>
-#include "parser/parser.cpp"
+#include <willow/willow.hpp>
 
 namespace pegtl = tao::pegtl;
+using willow::parser::Parser;
 
 int main(int argc, char *argv[])
 {
@@ -14,7 +15,8 @@ int main(int argc, char *argv[])
       return 1;
    }
 
-   willow::parser::parse(argv[1]);
+   Parser parser = Parser();
+   parser.parse(argv[1]);
 
    return 0;
 }
