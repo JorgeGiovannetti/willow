@@ -91,7 +91,6 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         std::cout << "Creating scope" << std::endl;
          try
          {
             state.st->createScope(state.currScopeKind);
@@ -109,7 +108,6 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         std::cout << "Exiting scope" << std::endl;
          state.st->exitScope();
       }
    };
