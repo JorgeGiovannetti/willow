@@ -67,8 +67,15 @@ namespace willow::parser
 
          state.filepathStack.push(currDirectory + "/" + importedDirectory);
 
-         pegtl::file_input importedIn(currDirectory + "/" + filepath);
-         pegtl::parse_nested<main_grammar, action>(in, importedIn, state);
+         try
+         {
+            pegtl::file_input importedIn(currDirectory + "/" + filepath);
+            pegtl::parse_nested<main_grammar, action>(in, importedIn, state);
+         }
+         catch (std::filesystem::filesystem_error &e)
+         {
+            throw pegtl::parse_error("Error: Failed to find file with relative path " + e.path1().string(), in);
+         }
       }
    };
 
