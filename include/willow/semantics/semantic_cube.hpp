@@ -2,8 +2,9 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
 
-using std::string, std::vector;
+using std::string, std::vector, std::unordered_map;
 
 namespace willow::semantics
 {
@@ -12,19 +13,13 @@ namespace willow::semantics
     {
     public:
         SemanticCube();
-        int query(string, string, string);
+        string query(string, string, string);
 
     private:
         vector<vector<vector<int>>> semanticMapping;
-        enum types
-        {
-            NONE,
-            INT,
-            FLOAT,
-            BOOL,
-            CHAR,
-            STRING
-        };
+        unordered_map<string, int> typeMapString;
+        unordered_map<int, string> typeMapInt;
+        unordered_map<string, int> operatorMap;
     };
 }
 
