@@ -13,6 +13,8 @@ namespace willow::parser
     {
         std::string id;
         willow::symbols::Type type;
+        std::string address;
+        
     };
 
     class State

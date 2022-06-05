@@ -101,14 +101,29 @@ namespace willow::parser
     struct expr_paropen : t_paropen {};
     struct expr_parclose : t_parclose {};
 
+    struct a1_expr_L1 : seps{};
     struct expr_L1 : seq<sor<seq<expr_paropen, seps, expr, seps, expr_parclose>, func_call, var, literal, read_func_call>, seps> {};
-    struct expr_L2 : seq<opt<sor<t_minus, t_not>, seps>, expr_L1> {};
-    struct expr_L3 : seq<expr_L2, seps, star<sor<t_mult, t_div, t_mod>, seps, expr_L2>> {};
-    struct expr_L4 : seq<expr_L3, seps, star<sor<t_plus, t_minus>, seps, expr_L3>> {};
-    struct expr_L5 : seq<expr_L4, opt<sor<t_geq, t_leq, t_greater, t_lesser>, seps, expr_L4>> {};
-    struct expr_L6 : seq<expr_L5, star<sor<t_neq, t_eq>, seps, expr_L5>> {};
-    struct expr_L7 : seq<expr_L6, star<t_and, sepp, expr_L6>>{};
-    struct expr : seq<expr_L7, star<t_or, sepp, expr_L7>> {};
+
+    struct a1_expr_L2 : seps{};
+    struct expr_L2 : seq<a1_expr_L2, opt<sor<t_minus, t_not>, seps>, expr_L1> {};
+
+    struct a1_expr_L3 : seps{};
+    struct expr_L3 : seq<expr_L2, a1_expr_L3, star<sor<t_mult, t_div, t_mod>, seps, expr_L2, a1_expr_L3>> {};
+
+    struct a1_expr_L4 : seps{};
+    struct expr_L4 : seq<expr_L3, a1_expr_L4, star<sor<t_plus, t_minus>, seps, expr_L3, a1_expr_L4>> {};
+
+    struct a1_expr_L5 : seps{};
+    struct expr_L5 : seq<expr_L4, a1_expr_L5, star<sor<t_geq, t_leq, t_greater, t_lesser>, seps, expr_L4, a1_expr_L5>> {};
+
+    struct a1_expr_L6 : seps{};
+    struct expr_L6 : seq<expr_L5, a1_expr_L6, star<sor<t_neq, t_eq>, seps, expr_L5, a1_expr_L6>> {};
+
+    struct a1_expr_L7 : seps{};
+    struct expr_L7 : seq<expr_L6, a1_expr_L7, star<sep, t_and, sepp, expr_L6, a1_expr_L7>>{};
+
+    struct a1_expr : seps{};
+    struct expr : seq<expr_L7, a1_expr, star<sep, t_or, sepp, expr_L7, a1_expr>> {};
 
     // Block
 

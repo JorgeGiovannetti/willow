@@ -1,7 +1,6 @@
 import (
-    "a.wil",
-    "b.wil",
-    "c.wil"
+    "import_test/a.wil",
+    "import_test/b.wil"
 )
  
 # comentario simple
