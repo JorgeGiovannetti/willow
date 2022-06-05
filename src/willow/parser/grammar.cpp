@@ -19,7 +19,8 @@ namespace willow::parser
     
     // Imports
 
-    struct imports : seq<t_import, seps, one<'('>, seps, t_lit_string, seps, star<t_comma, seps, t_lit_string, seps>, one<')'>, seps> {};
+    struct a_imports : seps {};
+    struct imports : seq<t_import, seps, one<'('>, seps, t_lit_string, a_imports, star<t_comma, seps, t_lit_string, a_imports>, one<')'>, seps> {};
 
     // Type
 
@@ -116,7 +117,8 @@ namespace willow::parser
     // Entry Point
 
     struct top_levels : sor<var_def_stmt, main_func, funcdef, classdef> {};
-    struct main_grammar : must<seps, sor<seq<imports, star<top_levels, seps>>, plus<top_levels, seps>>, seps, eof> {};
+    struct a_eof : eof {};
+    struct main_grammar : must<seps, sor<seq<imports, star<top_levels, seps>>, plus<top_levels, seps>>, seps, a_eof> {};
 
     // clang-format on
 }

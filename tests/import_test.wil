@@ -1,0 +1,7 @@
+import (
+    "import_test/a.wil"
+)
+
+fn main() {
+    x: int = 5;
+}

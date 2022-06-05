@@ -20,6 +20,7 @@ namespace willow::parser
     public:
         State();
 
+        std::stack<std::string> filepathStack;
         std::stack<operand> operandStack;
         std::stack<std::string> operatorStack;
         std::stack<size_t> jumpStack;
