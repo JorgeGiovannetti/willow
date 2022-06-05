@@ -1,0 +1,5 @@
+import (
+    "b.wil"
+)
+
+a_import_var: int = 3;

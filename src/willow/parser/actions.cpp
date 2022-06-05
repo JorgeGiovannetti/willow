@@ -1,9 +1,10 @@
 #include <iostream>
+#include <filesystem>
 
 #include <stack>
 #include <tao/pegtl.hpp>
 #include <willow/willow.hpp>
-#include "grammar.cpp"
+#include "grammar_errors.cpp"
 
 namespace pegtl = tao::pegtl;
 
@@ -51,14 +52,63 @@ namespace willow::parser
    {
    };
 
+   // Imports
+
+   template <>
+   struct action<a_imports>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         std::string filepath = state.operandStack.top().id;
+         state.operandStack.pop();
+
+         assert(!state.filepathStack.empty());
+
+         std::string currDirectory = state.filepathStack.top();
+         std::string importedDirectory = std::filesystem::path(filepath).parent_path().string();
+
+         state.filepathStack.push(currDirectory + "/" + importedDirectory);
+
+         try
+         {
+            pegtl::file_input importedIn(currDirectory + "/" + filepath);
+            pegtl::parse_nested<main_grammar, action>(in, importedIn, state);
+         }
+         catch (std::filesystem::filesystem_error &e)
+         {
+            throw pegtl::parse_error("Error: Failed to find file with relative path " + e.path1().string(), in);
+         }
+      }
+   };
+
+   template <>
+   struct action<a_eof>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         assert(!state.filepathStack.empty());
+         state.filepathStack.pop();
+      }
+   };
+
+   // Scopes
+
    template <>
    struct action<a_open_scope>
    {
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         std::cout << "Creating scope" << std::endl;
-         state.st->createScope(state.currScopeKind);
+         try
+         {
+            state.st->createScope(state.currScopeKind);
+         }
+         catch (const char *msg)
+         {
+            throw pegtl::parse_error(msg, in);
+         }
       }
    };
 
@@ -68,10 +118,11 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         std::cout << "Exiting scope" << std::endl;
          state.st->exitScope();
       }
    };
+
+   // Vars
 
    template <>
    struct action<identifier>
@@ -99,8 +150,14 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         std::cout << "Inserting id: " << state.operandStack.top().id << " with type: " << state.operandStack.top().type.name << std::endl;
-         state.st->insert(state.operandStack.top().id, state.operandStack.top().type);
+         try
+         {
+            state.st->insert(state.operandStack.top().id, state.operandStack.top().type);
+         }
+         catch (const char *msg)
+         {
+            throw pegtl::parse_error(msg, in);
+         }
       }
    };
 
@@ -349,7 +406,7 @@ namespace willow::parser
    };
 
    template <>
-   struct action<t_lit_string>
+   struct action<a_lit_string>
    {
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
@@ -368,8 +425,15 @@ namespace willow::parser
       {
          // TODO: Object Attributes and Arrays
          // Probably should refactor var to just ids and add . and [] operators
-         symbols::Symbol symbol = state.st->lookup(in.string());
-         state.operandStack.push({symbol.id, symbol.type});
+         try
+         {
+            symbols::Symbol symbol = state.st->lookup(in.string());
+            state.operandStack.push({symbol.id, symbol.type});
+         }
+         catch (const char *msg)
+         {
+            throw pegtl::parse_error(msg, in);
+         }
       }
    };
 
@@ -503,6 +567,186 @@ namespace willow::parser
       static void apply(const ActionInput &in, State &state)
       {
          // TODO
+      }
+   };
+
+   // Conditionals
+
+   template <>
+   struct action<a1_conditional>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         operand expr_result = state.operandStack.top();
+         state.operandStack.pop();
+
+         if (expr_result.type.name != "bool")
+         {
+            throw "Error: Expected boolean inside \"if-statement\"";
+         }
+
+         state.quadruples.push_back({"GOTOF", expr_result.id, "", ""});
+         state.jumpStack.push(state.quadruples.size() - 1);
+      }
+   };
+
+   template <>
+   struct action<a2_conditional>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         size_t conditional_end = state.jumpStack.top();
+         state.jumpStack.pop();
+
+         state.quadruples[conditional_end].targetAddress = std::to_string(state.quadruples.size());
+      }
+   };
+
+   template <>
+   struct action<a3_conditional>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         state.quadruples.push_back({"GOTO", "", "", ""});
+         size_t false_jump = state.jumpStack.top();
+         state.jumpStack.push(state.quadruples.size() - 1);
+         state.quadruples[false_jump].targetAddress = std::to_string(state.quadruples.size());
+      }
+   };
+
+   // While Loops
+
+   template <>
+   struct action<a1_while_loop>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         state.jumpStack.push(state.quadruples.size());
+      }
+   };
+
+   template <>
+   struct action<a2_while_loop>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         operand expr_result = state.operandStack.top();
+         state.operandStack.pop();
+
+         if (expr_result.type.name != "bool")
+         {
+            throw "Error: Expected boolean inside \"while-loop\" condition";
+         }
+
+         state.quadruples.push_back({"GOTOF", expr_result.id, "", ""});
+         state.jumpStack.push(state.quadruples.size() - 1);
+      }
+   };
+
+   template <>
+   struct action<a3_while_loop>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         size_t loop_jump_point = state.jumpStack.top();
+         state.jumpStack.pop();
+         size_t loop_start = state.jumpStack.top();
+         state.jumpStack.pop();
+
+         state.quadruples.push_back({"GOTO", "", "", std::to_string(loop_start)});
+         state.quadruples[loop_jump_point].targetAddress = std::to_string(state.quadruples.size());
+      }
+   };
+
+   // For Loops
+
+   template <>
+   struct action<a1_for_range>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         operand op2 = state.operandStack.top();
+         state.operandStack.pop();
+         operand op1 = state.operandStack.top();
+         state.operandStack.pop();
+
+         if (op1.type.name != "int" || op2.type.name != "int")
+         {
+            throw "Error: Expected int in for-loop range";
+         }
+
+         state.operandStack.push(op1);
+         state.operandStack.push(op2);
+      }
+   };
+
+   template <>
+   struct action<a1_for_loop>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         operand loop_iterator = state.operandStack.top();
+
+         if (loop_iterator.type.name != "int")
+         {
+            throw "Error: Non-int iterators are not (yet) supported.";
+         }
+      }
+   };
+
+   template <>
+   struct action<a2_for_loop>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         operand range_to = state.operandStack.top();
+         state.operandStack.pop();
+         operand range_from = state.operandStack.top();
+         state.operandStack.pop();
+         operand loop_iterator = state.operandStack.top();
+
+         state.quadruples.push_back({"=", range_from.id, "", loop_iterator.id});
+
+         state.jumpStack.push(state.quadruples.size());
+
+         std::string tempVar = "t" + std::to_string(state.tempCounter++);
+         state.quadruples.push_back({"<", loop_iterator.id, range_to.id, tempVar});
+         state.quadruples.push_back({"GOTOF", tempVar, "", ""});
+         state.jumpStack.push(state.quadruples.size() - 1);
+      }
+   };
+
+   template <>
+   struct action<a3_for_loop>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         operand loop_iterator = state.operandStack.top();
+         state.operandStack.pop();
+
+         std::string tempVar1 = "t" + std::to_string(state.tempCounter++);
+         state.quadruples.push_back({"+", loop_iterator.id, "1", tempVar1}); // TODO: Check how to display constants in quads
+         state.quadruples.push_back({"=", tempVar1, "", loop_iterator.id});
+         state.jumpStack.push(state.quadruples.size() - 1);
+
+         size_t for_jump = state.jumpStack.top();
+         state.jumpStack.pop();
+
+         state.quadruples.push_back({"GOTO", "", "", std::to_string(for_jump)});
+
+         size_t for_false_jump = state.jumpStack.top();
+         state.jumpStack.pop();
+         state.quadruples[for_jump].targetAddress = std::to_string(state.quadruples.size());
       }
    };
 

@@ -11,8 +11,10 @@ namespace willow::parser
 
     struct operand
     {
-        std::string address;
+        std::string id;
         willow::symbols::Type type;
+        std::string address;
+        
     };
 
     class State
@@ -20,8 +22,10 @@ namespace willow::parser
     public:
         State();
 
+        std::stack<std::string> filepathStack;
         std::stack<operand> operandStack;
         std::stack<std::string> operatorStack;
+        std::stack<size_t> jumpStack;
         std::vector<Quadruple> quadruples;
         willow::symbols::ScopeKind currScopeKind;
         std::shared_ptr<SymbolTable> st;

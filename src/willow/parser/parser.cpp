@@ -1,5 +1,5 @@
 #include <iostream>
-#include <string>
+#include <filesystem>
 #include <tao/pegtl.hpp>
 #include "actions.cpp"
 #include <willow/willow.hpp>
@@ -15,22 +15,30 @@ namespace willow::parser
 
     void Parser::parse(const std::string &filepath)
     {
-        pegtl::file_input in(filepath);
 
         State st = State();
+        std::string currDirectory = std::filesystem::path(filepath).parent_path().string();
+        st.filepathStack.push(currDirectory);
 
         try
         {
-            pegtl::parse<grammar, action>(in, st);
-            std::cout << "Accepted!" << std::endl;
-            st.displayQuadruples();
+            pegtl::file_input in(filepath);
+            try
+            {
+                pegtl::parse<main_grammar, action>(in, st);
+                st.displayQuadruples();
+            }
+            catch (const pegtl::parse_error &e)
+            {
+                const auto p = e.positions().front();
+                std::cerr << e.what() << std::endl
+                          << in.line_at(p) << '\n'
+                          << std::setw(p.column) << '^' << std::endl;
+            }
         }
-        catch (const pegtl::parse_error &e)
+        catch (std::filesystem::filesystem_error &e)
         {
-            const auto p = e.positions().front();
-            std::cerr << e.what() << std::endl
-                      << in.line_at(p) << '\n'
-                      << std::setw(p.column) << '^' << std::endl;
+            std::cerr << "Error: Failed to find file with path " << e.path1() << std::endl;
         }
     }
 }
