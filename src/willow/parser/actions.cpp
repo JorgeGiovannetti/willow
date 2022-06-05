@@ -16,6 +16,7 @@ namespace willow::parser
 
    void addBinaryOperation(State &state)
    {
+
       std::string operation = state.operatorStack.top();
       state.operatorStack.pop();
 
@@ -25,24 +26,19 @@ namespace willow::parser
       operand op1 = state.operandStack.top();
       state.operandStack.pop();
 
+      std::cout << "Adding binary operation " << op1.id << " " << operation << " " << op2.id << std::endl;
+
       // TODO: Type-checking via semantic cube
       if (true)
       {
-         if (operation == "=")
-         {
-            Quadruple quad = {operation, op1.address, "", op2.address};
-            state.quadruples.push_back(quad);
-         }
-         else
-         {
-            std::string tempAddress = 't' + std::to_string(state.tempCounter++);
-            Quadruple quad = {operation, op1.address, op2.address, tempAddress};
-            state.quadruples.push_back(quad);
-            symbols::Type temp_type = op1.type; // TODO: get type from semantic cube
-            state.operandStack.push({tempAddress, temp_type});
-         }
+         std::string tempAddress = 't' + std::to_string(state.tempCounter++);
+         Quadruple quad = {operation, op1.id, op2.id, tempAddress};
+         state.quadruples.push_back(quad);
+         symbols::Type temp_type = op1.type; // TODO: get type from semantic cube
+         state.operandStack.push({tempAddress, temp_type});
       }
-      else{
+      else
+      {
          throw "ERROR: type mismatch";
       }
    }
@@ -77,7 +73,7 @@ namespace willow::parser
          }
          catch (std::filesystem::filesystem_error &e)
          {
-            throw pegtl::parse_error("Error: Failed to find file with relative path " + e.path1().string(), in);
+            throw pegtl::parse_error("Error: Failed to find file with path " + e.path1().string(), in);
          }
       }
    };
@@ -130,6 +126,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         std::cout << "Pushing identifier " << in.string() << std::endl;
          state.operandStack.push({in.string(), willow::symbols::NONE_TYPE});
       }
    };
@@ -140,6 +137,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         std::cout << "Adding type to identifier " << in.string() << std::endl;
          state.operandStack.top().type = {in.string()};
       }
    };
@@ -158,6 +156,7 @@ namespace willow::parser
          {
             throw pegtl::parse_error(msg, in);
          }
+         std::cout << "Added s_var to symbol table!" << std::endl;
       }
    };
 
@@ -319,7 +318,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         // TODO
+         state.operatorStack.push(in.string());
       }
    };
 
@@ -329,7 +328,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         // TODO
+         state.operatorStack.push(in.string());
       }
    };
 
@@ -339,7 +338,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         // TODO
+         state.operatorStack.push(in.string());
       }
    };
 
@@ -349,7 +348,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         // TODO
+         state.operatorStack.push(in.string());
       }
    };
 
@@ -359,7 +358,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         // TODO
+         state.operatorStack.push(in.string());
       }
    };
 
@@ -371,6 +370,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         std::cout << "Pushing int literal " << in.string() << std::endl;
          state.operandStack.push({in.string(), {"int"}});
       }
    };
@@ -381,6 +381,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         std::cout << "Pushing float literal" << in.string() << std::endl;
          state.operandStack.push({in.string(), {"float"}});
       }
    };
@@ -425,15 +426,15 @@ namespace willow::parser
       {
          // TODO: Object Attributes and Arrays
          // Probably should refactor var to just ids and add . and [] operators
-         try
-         {
-            symbols::Symbol symbol = state.st->lookup(in.string());
-            state.operandStack.push({symbol.id, symbol.type});
-         }
-         catch (const char *msg)
-         {
-            throw pegtl::parse_error(msg, in);
-         }
+         // try
+         // {
+         //    symbols::Symbol symbol = state.st->lookup(in.string());
+         //    state.operandStack.push({symbol.id, symbol.type});
+         // }
+         // catch (const char *msg)
+         // {
+         //    throw pegtl::parse_error(msg, in);
+         // }
       }
    };
 
@@ -469,7 +470,8 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         if(state.operatorStack.top() == "or"){
+         if (state.operatorStack.top() == "or")
+         {
             addBinaryOperation(state);
          }
       }
@@ -481,7 +483,8 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         if(state.operatorStack.top() == "and"){
+         if (state.operatorStack.top() == "and")
+         {
             addBinaryOperation(state);
          }
       }
@@ -493,7 +496,8 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         if(state.operatorStack.top() == "!=" || state.operatorStack.top() == "=="){
+         if (state.operatorStack.top() == "!=" || state.operatorStack.top() == "==")
+         {
             addBinaryOperation(state);
          }
       }
@@ -505,8 +509,8 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         if(state.operatorStack.top() == ">=" || state.operatorStack.top() == "<=" 
-            || state.operatorStack.top() == ">" || state.operatorStack.top() == "<"){
+         if (state.operatorStack.top() == ">=" || state.operatorStack.top() == "<=" || state.operatorStack.top() == ">" || state.operatorStack.top() == "<")
+         {
             addBinaryOperation(state);
          }
       }
@@ -518,7 +522,8 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         if(state.operatorStack.top() == "+" || state.operatorStack.top() == "-"){
+         if (state.operatorStack.top() == "+" || state.operatorStack.top() == "-")
+         {
             addBinaryOperation(state);
          }
       }
@@ -530,7 +535,8 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         if(state.operatorStack.top() == "*" || state.operatorStack.top() == "/" || state.operatorStack.top() == "%"){
+         if (state.operatorStack.top() == "*" || state.operatorStack.top() == "/" || state.operatorStack.top() == "%")
+         {
             addBinaryOperation(state);
          }
       }
@@ -542,7 +548,8 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         if(state.operatorStack.top() == "-" || state.operatorStack.top() == "!"){
+         if (state.operatorStack.top() == "-" || state.operatorStack.top() == "!")
+         {
             addBinaryOperation(state);
          }
       }
@@ -554,11 +561,41 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         //TO-DO
+         // TO-DO
       }
    };
 
    // Assignment
+
+   template <>
+   struct action<var_def>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+
+         if (state.operatorStack.empty() || state.operatorStack.top() != "=")
+         {
+            return;
+         }
+
+         std::cout << "Assignment inside var_def!" << std::endl;
+
+         operand op2 = state.operandStack.top();
+         state.operandStack.pop();
+         operand op1 = state.operandStack.top();
+         state.operandStack.pop();
+         std::string operation = state.operatorStack.top();
+         state.operatorStack.pop();
+
+         // TODO: Type-checking via semantic cube
+         if (true)
+         {
+            Quadruple quad = {operation, op2.id, "", op1.id};
+            state.quadruples.push_back(quad);
+         }
+      }
+   };
 
    template <>
    struct action<assignment>
@@ -566,7 +603,41 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         // TODO
+         std::cout << "Assignment!" << std::endl;
+
+         operand op2 = state.operandStack.top();
+         state.operandStack.pop();
+         operand op1 = state.operandStack.top();
+         state.operandStack.pop();
+         std::string operation = state.operatorStack.top();
+         state.operatorStack.pop();
+
+         if (operation == "*=" || operation == "/=" || operation == "+=" || operation == "-=" || operation == "%=")
+         {
+            // TODO: Type-checking via semantic cube
+            if (true)
+            {
+               std::string tempAddress = 't' + std::to_string(state.tempCounter++);
+               Quadruple quad = {operation.substr(0, 1), op1.id, op2.id, tempAddress};
+               state.quadruples.push_back(quad);
+               symbols::Type temp_type = op1.type; // TODO: get type from semantic cube
+               state.operandStack.push({tempAddress, temp_type});
+               op2 = state.operandStack.top();
+
+               operation = "=";
+            }
+            else
+            {
+               throw "ERROR: type mismatch";
+            }
+         }
+
+         // TODO: Type-checking via semantic cube
+         if (operation == "=" && true)
+         {
+            Quadruple quad = {operation, op2.id, "", op1.id};
+            state.quadruples.push_back(quad);
+         }
       }
    };
 
@@ -749,5 +820,4 @@ namespace willow::parser
          state.quadruples[for_jump].targetAddress = std::to_string(state.quadruples.size());
       }
    };
-
 }
