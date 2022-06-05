@@ -25,8 +25,6 @@ namespace willow::parser
       operand op1 = state.operandStack.top();
       state.operandStack.pop();
 
-      std::cout << "Adding binary operation " << op1.id << " " << operation << " " << op2.id << std::endl;
-
       symbols::Type result_type = {state.sc.query(op1.type.name, op2.type.name, operation)};
       std::string tempAddress = 't' + std::to_string(state.tempCounter++);
       Quadruple quad = {operation, op1.id, op2.id, tempAddress};
@@ -118,7 +116,6 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         std::cout << "Pushing identifier " << in.string() << std::endl;
          state.operandStack.push({in.string(), willow::symbols::NONE_TYPE});
       }
    };
@@ -129,7 +126,6 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         std::cout << "Adding type to identifier " << in.string() << std::endl;
          state.operandStack.top().type = {in.string()};
       }
    };
@@ -148,7 +144,6 @@ namespace willow::parser
          {
             throw pegtl::parse_error(msg, in);
          }
-         std::cout << "Added s_var to symbol table!" << std::endl;
       }
    };
 
@@ -362,7 +357,6 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         std::cout << "Pushing int literal " << in.string() << std::endl;
          state.operandStack.push({in.string(), {"int"}});
       }
    };
@@ -373,7 +367,6 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         std::cout << "Pushing float literal" << in.string() << std::endl;
          state.operandStack.push({in.string(), {"float"}});
       }
    };
@@ -578,10 +571,16 @@ namespace willow::parser
          std::string operation = state.operatorStack.top();
          state.operatorStack.pop();
 
-         if (op1.type.name == op2.type.name)
+         try
          {
-            Quadruple quad = {operation, op2.id, "", op1.id};
+            state.sc.query(op1.type.name, op2.type.name, "=");
+
+            Quadruple quad = {"=", op2.id, "", op1.id};
             state.quadruples.push_back(quad);
+         }
+         catch (const char *msg)
+         {
+            throw pegtl::parse_error(msg, in);
          }
       }
    };
@@ -592,8 +591,6 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         std::cout << "Assignment!" << std::endl;
-
          operand op2 = state.operandStack.top();
          state.operandStack.pop();
          operand op1 = state.operandStack.top();
@@ -601,9 +598,9 @@ namespace willow::parser
          std::string operation = state.operatorStack.top();
          state.operatorStack.pop();
 
-         if (operation == "*=" || operation == "/=" || operation == "+=" || operation == "-=" || operation == "%=")
+         try
          {
-            try
+            if (operation == "*=" || operation == "/=" || operation == "+=" || operation == "-=" || operation == "%=")
             {
                std::string tempAddress = 't' + std::to_string(state.tempCounter++);
                Quadruple quad = {operation.substr(0, 1), op1.id, op2.id, tempAddress};
@@ -611,21 +608,16 @@ namespace willow::parser
                symbols::Type temp_type = op1.type;
                state.operandStack.push({tempAddress, temp_type});
                op2 = state.operandStack.top();
-
-               operation = "=";
             }
-            catch (const char *msg)
-            {
-               throw pegtl::parse_error(msg, in);
-            }
-         }
 
-         // TODO: CHECK WITH SEMANTIC CUBE INSTEAD OF op1.type.name == op2.type.name
+            state.sc.query(op1.type.name, op2.type.name, "=");
 
-         if (operation == "=" && op1.type.name == op2.type.name)
-         {
-            Quadruple quad = {operation, op2.id, "", op1.id};
+            Quadruple quad = {"=", op2.id, "", op1.id};
             state.quadruples.push_back(quad);
+         }
+         catch (const char *msg)
+         {
+            throw pegtl::parse_error(msg, in);
          }
       }
    };
