@@ -18,10 +18,10 @@ namespace willow::parser
       std::string operation = state.operatorStack.top();
       state.operatorStack.pop();
 
-      operand op1 = state.operandStack.top();
+      operand op2 = state.operandStack.top();
       state.operandStack.pop();
 
-      operand op2 = state.operandStack.top();
+      operand op1 = state.operandStack.top();
       state.operandStack.pop();
 
       // TODO: Type-checking via semantic cube
@@ -29,17 +29,20 @@ namespace willow::parser
       {
          if (operation == "=")
          {
-            Quadruple quad = {operation, op1.id, "", op2.id};
+            Quadruple quad = {operation, op1.address, "", op2.address};
             state.quadruples.push_back(quad);
          }
          else
          {
             std::string tempAddress = 't' + std::to_string(state.tempCounter++);
-            Quadruple quad = {operation, op1.id, op2.id, tempAddress};
+            Quadruple quad = {operation, op1.address, op2.address, tempAddress};
             state.quadruples.push_back(quad);
             symbols::Type temp_type = op1.type; // TODO: get type from semantic cube
             state.operandStack.push({tempAddress, temp_type});
          }
+      }
+      else{
+         throw "ERROR: type mismatch";
       }
    }
 
@@ -402,10 +405,92 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         while (!state.operatorStack.empty())
-         {
+         if(state.operatorStack.top() == "or"){
             addBinaryOperation(state);
          }
+      }
+   };
+
+   template <>
+   struct action<a1_expr_L7>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         if(state.operatorStack.top() == "and"){
+            addBinaryOperation(state);
+         }
+      }
+   };
+
+   template <>
+   struct action<a1_expr_L6>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         if(state.operatorStack.top() == "!=" || state.operatorStack.top() == "=="){
+            addBinaryOperation(state);
+         }
+      }
+   };
+
+   template <>
+   struct action<a1_expr_L5>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         if(state.operatorStack.top() == ">=" || state.operatorStack.top() == "<=" 
+            || state.operatorStack.top() == ">" || state.operatorStack.top() == "<"){
+            addBinaryOperation(state);
+         }
+      }
+   };
+
+   template <>
+   struct action<a1_expr_L4>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         if(state.operatorStack.top() == "+" || state.operatorStack.top() == "-"){
+            addBinaryOperation(state);
+         }
+      }
+   };
+
+   template <>
+   struct action<a1_expr_L3>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         if(state.operatorStack.top() == "*" || state.operatorStack.top() == "/" || state.operatorStack.top() == "%"){
+            addBinaryOperation(state);
+         }
+      }
+   };
+
+   template <>
+   struct action<a1_expr_L2>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         if(state.operatorStack.top() == "-" || state.operatorStack.top() == "!"){
+            addBinaryOperation(state);
+         }
+      }
+   };
+
+   template <>
+   struct action<a1_expr_L1>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         //TO-DO
       }
    };
 

@@ -11,6 +11,5 @@ namespace willow::codegen
         std::string address1;
         std::string address2;
         std::string targetAddress;
-        std::string to_string();
     };
 }

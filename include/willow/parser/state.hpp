@@ -11,7 +11,7 @@ namespace willow::parser
 
     struct operand
     {
-        std::string id;
+        std::string address;
         willow::symbols::Type type;
     };
 
