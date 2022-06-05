@@ -94,7 +94,7 @@ namespace willow::parser
     struct continue_stmt : seq<t_continue, seps, t_semicolon> {};
     struct return_stmt : if_must<t_return, sepp, opt<expr>, seps, t_semicolon> {};
 
-    struct statement : seq<sor<var_def_stmt, assignment, return_stmt, break_stmt, continue_stmt, funcs, conditional, loops, block>, seps> {};
+    struct statement : seq<sor<seq<at<assignment>, assignment>, var_def_stmt, return_stmt, break_stmt, continue_stmt, funcs, conditional, loops, block>, seps> {};
 
     // Expressions
 
@@ -102,7 +102,7 @@ namespace willow::parser
     struct expr_parclose : t_parclose {};
 
     struct a1_expr_L1 : seps{};
-    struct expr_L1 : seq<sor<seq<expr_paropen, seps, expr, seps, expr_parclose>, func_call, var, literal, read_func_call>, seps> {};
+    struct expr_L1 : seq<sor<seq<expr_paropen, seps, expr, seps, expr_parclose>, seq<at<func_call>, func_call>, var, literal, read_func_call>, seps> {};
 
     struct a1_expr_L2 : seps{};
     struct expr_L2 : seq<a1_expr_L2, opt<sor<t_minus, t_not>, seps>, expr_L1> {};
@@ -120,10 +120,10 @@ namespace willow::parser
     struct expr_L6 : seq<expr_L5, a1_expr_L6, star<sor<t_neq, t_eq>, seps, expr_L5, a1_expr_L6>> {};
 
     struct a1_expr_L7 : seps{};
-    struct expr_L7 : seq<expr_L6, a1_expr_L7, star<sep, t_and, sepp, expr_L6, a1_expr_L7>>{};
+    struct expr_L7 : seq<expr_L6, a1_expr_L7, star<t_and, sepp, expr_L6, a1_expr_L7>>{};
 
     struct a1_expr : seps{};
-    struct expr : seq<expr_L7, a1_expr, star<sep, t_or, sepp, expr_L7, a1_expr>> {};
+    struct expr : seq<expr_L7, a1_expr, star<t_or, sepp, expr_L7, a1_expr>> {};
 
     // Block
 
