@@ -74,7 +74,7 @@ namespace willow::parser
          }
          catch (std::filesystem::filesystem_error &e)
          {
-            throw pegtl::parse_error("Error: Failed to find file with relative path " + e.path1().string(), in);
+            throw pegtl::parse_error("Error: Failed to find file with path " + e.path1().string(), in);
          }
       }
    };
