@@ -4,22 +4,20 @@
 #include <vector>
 #include <unordered_map>
 
-using std::string, std::vector, std::unordered_map;
-
 namespace willow::semantics
 {
-
     class SemanticCube
     {
     public:
         SemanticCube();
-        string query(string, string, string);
+        std::string query(std::string, std::string, std::string);
+        void newType(std::string);
 
     private:
-        vector<vector<vector<int>>> semanticMapping;
-        unordered_map<string, int> typeMapString;
-        unordered_map<int, string> typeMapInt;
-        unordered_map<string, int> operatorMap;
+        std::vector<std::vector<std::vector<int>>> semanticMapping;
+        std::unordered_map<std::string, int> typeStringToInt;
+        std::unordered_map<int, std::string> typeIntToString;
+        std::unordered_map<std::string, int> operatorMap;
     };
 }
 

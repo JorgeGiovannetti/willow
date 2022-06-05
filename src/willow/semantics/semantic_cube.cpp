@@ -2,71 +2,73 @@
 #include <string>
 #include <vector>
 
-using std::string, std::vector;
-
-enum types {
-    ERROR = -1,
-    INT = 0,
-    FLOAT = 1,
-    BOOL = 2,
-    CHAR = 3,
-    STRING = 4,
-};
-
-enum operators {
-    ERROR = -1,
-    SUM = 0,
-    MINUS = 1,
-    MULTIPLY = 2,
-    DIVIDE = 3,
-    MOD = 4,
-};
-
 namespace willow::semantics
 {
-    int n = 30;
 
-    SemanticCube::SemanticCube() : semanticMapping(n, vector<vector<int>>(n, vector<int>(n,ERROR))) {
+    enum types
+    {
+        ERROR = -1,
+        INT = 0,
+        FLOAT = 1,
+        BOOL = 2,
+        CHAR = 3,
+        STRING = 4,
+    };
+
+    enum operators
+    {
+        SUM = 0,
+        MINUS = 1,
+        MULTIPLY = 2,
+        DIVIDE = 3,
+        MOD = 4,
+    };
+
+    int types_count = 5;
+    const int operator_count = 5;
+
+    SemanticCube::SemanticCube() : semanticMapping(types_count, std::vector<std::vector<int>>(types_count, std::vector<int>(operator_count, ERROR)))
+    {
         ///////////////
         //   INT
         ///////////////
 
-        //SUM
+        // SUM
         semanticMapping[INT][INT][SUM] = INT;
         semanticMapping[INT][FLOAT][SUM] = FLOAT;
-        
-        //MINUS
+
+        // MINUS
         semanticMapping[INT][INT][MINUS] = INT;
         semanticMapping[INT][FLOAT][MINUS] = FLOAT;
-        
-        //MULTIPLY
+
+        // MULTIPLY
         semanticMapping[INT][INT][MULTIPLY] = INT;
         semanticMapping[INT][FLOAT][MULTIPLY] = FLOAT;
 
-        //DIVIDE
+        // DIVIDE
         semanticMapping[INT][INT][DIVIDE] = INT;
         semanticMapping[INT][FLOAT][DIVIDE] = FLOAT;
-        
-        //MOD
+
+        // MOD
         semanticMapping[INT][INT][MOD] = INT;
 
         ///////////////
         //   FLOAT
         ///////////////
-        
-        //SUM
+
+        // SUM
         semanticMapping[FLOAT][INT][SUM] = FLOAT;
         semanticMapping[FLOAT][FLOAT][SUM] = FLOAT;
 
-        //MINUS
+        // MINUS
         semanticMapping[FLOAT][INT][MINUS] = FLOAT;
         semanticMapping[FLOAT][FLOAT][MINUS] = FLOAT;
-        
-        //MULTIPLY
+
+        // MULTIPLY
         semanticMapping[FLOAT][INT][MULTIPLY] = FLOAT;
         semanticMapping[FLOAT][FLOAT][MULTIPLY] = FLOAT;
-        
-        //DIVIDE
+
+        // DIVIDE
         semanticMapping[FLOAT][INT][DIVIDE] = FLOAT;
         semanticMapping[FLOAT][FLOAT][DIVIDE] = FLOAT;
 
@@ -74,20 +76,20 @@ namespace willow::semantics
         //   CHAR
         ///////////////
 
-        //SUM
+        // SUM
         semanticMapping[CHAR][INT][SUM] = CHAR;
         semanticMapping[CHAR][CHAR][SUM] = INT;
         semanticMapping[CHAR][STRING][SUM] = STRING;
 
-        //MINUS
+        // MINUS
         semanticMapping[CHAR][INT][MINUS] = CHAR;
         semanticMapping[CHAR][CHAR][MINUS] = INT;
-        
+
         ///////////////
         //   STRING
         ///////////////
 
-        //SUM
+        // SUM
         semanticMapping[STRING][CHAR][SUM] = STRING;
         semanticMapping[STRING][STRING][SUM] = STRING;
 
@@ -95,21 +97,21 @@ namespace willow::semantics
         //   UNORDERED_MAPS
         ///////////////
 
-        //TYPES STRING
-        typeMapString["int"] = 0;
-        typeMapString["float"] = 1;
-        typeMapString["bool"] = 2;
-        typeMapString["char"] = 3;
-        typeMapString["string"] = 4;
+        // TYPES STRING
+        typeStringToInt["int"] = 0;
+        typeStringToInt["float"] = 1;
+        typeStringToInt["bool"] = 2;
+        typeStringToInt["char"] = 3;
+        typeStringToInt["string"] = 4;
 
-        //TYPES INT
-        typeMapInt[0] = "int";
-        typeMapInt[1] = "float";
-        typeMapInt[2] = "bool";
-        typeMapInt[3] = "char";
-        typeMapInt[4] = "string";
+        // TYPES INT
+        typeIntToString[0] = "int";
+        typeIntToString[1] = "float";
+        typeIntToString[2] = "bool";
+        typeIntToString[3] = "char";
+        typeIntToString[4] = "string";
 
-        //OPERATORS
+        // OPERATORS
         operatorMap["+"] = 0;
         operatorMap["-"] = 1;
         operatorMap["*"] = 2;
@@ -117,13 +119,21 @@ namespace willow::semantics
         operatorMap["%"] = 4;
     }
 
-    string SemanticCube::query(string op1, string op2, string oper){
-        int result = semanticMapping[typeMapString[op1]][typeMapString[op2]][operatorMap[oper]];
-        if(result != -1){
-            return typeMapInt[result];
+    std::string SemanticCube::query(std::string op1, std::string op2, std::string oper)
+    {
+        int return_type = semanticMapping[typeStringToInt[op1]][typeStringToInt[op2]][operatorMap[oper]];
+        if (return_type == ERROR)
+        {
+            throw "operator " + oper + " not supported with types " + op1 + " and " + op2;
         }
-        else{
-            throw "ERROR: type mismatch";
-        }
+        return typeIntToString[return_type];
+    }
+
+    void SemanticCube::newType(std::string type_name)
+    {
+        typeIntToString[types_count] = type_name;
+        typeStringToInt[type_name] = types_count;
+        types_count++;
+        semanticMapping.push_back(std::vector<std::vector<int>>(types_count, std::vector<int>(operator_count, ERROR)));
     }
 }

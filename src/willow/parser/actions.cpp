@@ -16,7 +16,6 @@ namespace willow::parser
 
    void addBinaryOperation(State &state)
    {
-
       std::string operation = state.operatorStack.top();
       state.operatorStack.pop();
 
@@ -28,19 +27,12 @@ namespace willow::parser
 
       std::cout << "Adding binary operation " << op1.id << " " << operation << " " << op2.id << std::endl;
 
-      // TODO: Type-checking via semantic cube
-      if (true)
-      {
-         std::string tempAddress = 't' + std::to_string(state.tempCounter++);
-         Quadruple quad = {operation, op1.id, op2.id, tempAddress};
-         state.quadruples.push_back(quad);
-         symbols::Type temp_type = op1.type; // TODO: get type from semantic cube
-         state.operandStack.push({tempAddress, temp_type});
-      }
-      else
-      {
-         throw "ERROR: type mismatch";
-      }
+      symbols::Type result_type = {state.sc.query(op1.type.name, op2.type.name, operation)};
+      std::string tempAddress = 't' + std::to_string(state.tempCounter++);
+      Quadruple quad = {operation, op1.id, op2.id, tempAddress};
+      state.quadruples.push_back(quad);
+
+      state.operandStack.push({tempAddress, result_type});
    }
 
    template <typename Rule>
@@ -561,7 +553,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         // TO-DO
+         // TODO
       }
    };
 
@@ -579,8 +571,6 @@ namespace willow::parser
             return;
          }
 
-         std::cout << "Assignment inside var_def!" << std::endl;
-
          operand op2 = state.operandStack.top();
          state.operandStack.pop();
          operand op1 = state.operandStack.top();
@@ -588,8 +578,7 @@ namespace willow::parser
          std::string operation = state.operatorStack.top();
          state.operatorStack.pop();
 
-         // TODO: Type-checking via semantic cube
-         if (true)
+         if (op1.type.name == op2.type.name)
          {
             Quadruple quad = {operation, op2.id, "", op1.id};
             state.quadruples.push_back(quad);
@@ -614,26 +603,26 @@ namespace willow::parser
 
          if (operation == "*=" || operation == "/=" || operation == "+=" || operation == "-=" || operation == "%=")
          {
-            // TODO: Type-checking via semantic cube
-            if (true)
+            try
             {
                std::string tempAddress = 't' + std::to_string(state.tempCounter++);
                Quadruple quad = {operation.substr(0, 1), op1.id, op2.id, tempAddress};
                state.quadruples.push_back(quad);
-               symbols::Type temp_type = op1.type; // TODO: get type from semantic cube
+               symbols::Type temp_type = op1.type;
                state.operandStack.push({tempAddress, temp_type});
                op2 = state.operandStack.top();
 
                operation = "=";
             }
-            else
+            catch (const char *msg)
             {
-               throw "ERROR: type mismatch";
+               throw pegtl::parse_error(msg, in);
             }
          }
 
-         // TODO: Type-checking via semantic cube
-         if (operation == "=" && true)
+         // TODO: CHECK WITH SEMANTIC CUBE INSTEAD OF op1.type.name == op2.type.name
+
+         if (operation == "=" && op1.type.name == op2.type.name)
          {
             Quadruple quad = {operation, op2.id, "", op1.id};
             state.quadruples.push_back(quad);

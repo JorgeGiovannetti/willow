@@ -3,9 +3,6 @@
 
 #include <willow/willow.hpp>
 
-using willow::codegen::Quadruple;
-using willow::symbols::SymbolTable;
-
 namespace willow::parser
 {
 
@@ -14,7 +11,6 @@ namespace willow::parser
         std::string id;
         willow::symbols::Type type;
         std::string address;
-        
     };
 
     class State
@@ -26,9 +22,10 @@ namespace willow::parser
         std::stack<operand> operandStack;
         std::stack<std::string> operatorStack;
         std::stack<size_t> jumpStack;
-        std::vector<Quadruple> quadruples;
+        std::vector<willow::codegen::Quadruple> quadruples;
         willow::symbols::ScopeKind currScopeKind;
-        std::shared_ptr<SymbolTable> st;
+        std::shared_ptr<willow::symbols::SymbolTable> st;
+        willow::semantics::SemanticCube sc;
         int tempCounter;
 
         void displayQuadruples();
