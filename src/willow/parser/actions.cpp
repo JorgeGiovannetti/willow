@@ -62,8 +62,6 @@ namespace willow::parser
 
          assert(!state.filepathStack.empty());
 
-         std::cout << "Importing file: " << filepath << std::endl;
-
          std::string currDirectory = state.filepathStack.top();
          std::string importedDirectory = std::filesystem::path(filepath).parent_path().string();
 
@@ -94,7 +92,14 @@ namespace willow::parser
       static void apply(const ActionInput &in, State &state)
       {
          std::cout << "Creating scope" << std::endl;
-         state.st->createScope(state.currScopeKind);
+         try
+         {
+            state.st->createScope(state.currScopeKind);
+         }
+         catch (const char *msg)
+         {
+            throw pegtl::parse_error(msg, in);
+         }
       }
    };
 
@@ -137,8 +142,14 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         std::cout << "Inserting id: " << state.operandStack.top().id << " with type: " << state.operandStack.top().type.name << std::endl;
-         state.st->insert(state.operandStack.top().id, state.operandStack.top().type);
+         try
+         {
+            state.st->insert(state.operandStack.top().id, state.operandStack.top().type);
+         }
+         catch (const char *msg)
+         {
+            throw pegtl::parse_error(msg, in);
+         }
       }
    };
 
@@ -406,8 +417,15 @@ namespace willow::parser
       {
          // TODO: Object Attributes and Arrays
          // Probably should refactor var to just ids and add . and [] operators
-         symbols::Symbol symbol = state.st->lookup(in.string());
-         state.operandStack.push({symbol.id, symbol.type});
+         try
+         {
+            symbols::Symbol symbol = state.st->lookup(in.string());
+            state.operandStack.push({symbol.id, symbol.type});
+         }
+         catch (const char *msg)
+         {
+            throw pegtl::parse_error(msg, in);
+         }
       }
    };
 

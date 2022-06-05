@@ -38,14 +38,14 @@ namespace willow::symbols
             }
         }
 
-        throw "ERROR: SYMBOL NOT FOUND"; // TODO: Create willow errors
+        throw "identifier " + id +" is undefined"; // TODO: Create willow errors
     }
 
     void SymbolTable::insert(std::string id, Type type)
     {
         if (currentScope->symbols.count(id))
         {
-            throw "ERROR: SYMBOL ALREADY DEFINED"; // TODO: Create willow errors
+            throw "identifier " + id + " is already defined"; // TODO: Create willow errors
         }
 
         currentScope->symbols[id] = {type, id};
@@ -55,7 +55,7 @@ namespace willow::symbols
     {
         if (scopeKind == GLOBAL)
         {
-            throw "ERROR: CANNOT DEFINE A GLOBAL SCOPE"; // TODO: Create willow errors
+            throw "INTERNAL ERROR: CANNOT DEFINE A GLOBAL SCOPE"; // TODO: Create willow errors
         }
 
         std::shared_ptr<Scope> scope = std::make_shared<Scope>(scopeCounter, scopeKind);
@@ -95,7 +95,7 @@ namespace willow::symbols
     {
         if (scope->kind == GLOBAL)
         {
-            throw "ERROR: CANNOT DELETE GLOBAL SCOPE"; // TODO: Create willow errors
+            throw "INTERNAL ERROR: CANNOT DELETE GLOBAL SCOPE"; // TODO: Create willow errors
         }
 
         // Delete children
