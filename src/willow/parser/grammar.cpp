@@ -29,7 +29,7 @@ namespace willow::parser
 
     // Literals
 
-    struct literal : sor<t_lit_int, t_lit_float, t_lit_bool, t_lit_char, t_lit_string> {};
+    struct literal : sor<t_lit_float, t_lit_int, t_lit_bool, t_lit_char, t_lit_string> {};
 
     // Vars
 
