@@ -8,5 +8,6 @@
 #include "semantics/semantic_cube.hpp"
 #include "parser/parser.hpp"
 #include "parser/state.hpp"
+#include "memory/memory_manager.hpp"
 
 #endif
