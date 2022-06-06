@@ -67,7 +67,7 @@ namespace willow::parser
     struct a1_conditional : seps {};
     struct a2_conditional : seps {};
     struct a3_conditional : seps {};
-    struct conditional : seq<t_if, seps, t_paropen, seps, expr, seps, t_parclose, a1_conditional, block, opt<seps, t_else, a3_conditional, sor<block, conditional>>, a2_conditional> {};
+    struct conditional : if_must<t_if, seps, t_paropen, seps, expr, seps, t_parclose, a1_conditional, block, opt<seps, t_else, a3_conditional, sor<block, conditional>>, a2_conditional> {};
 
     // Loops
 
@@ -105,7 +105,7 @@ namespace willow::parser
     struct expr_L1 : seq<sor<seq<expr_paropen, seps, expr, seps, expr_parclose>, seq<at<func_call>, func_call>, var, literal, read_func_call>, seps> {};
 
     struct a1_expr_L2 : seps{};
-    struct expr_L2 : seq<a1_expr_L2, opt<sor<t_minus, t_not>, seps>, expr_L1> {};
+    struct expr_L2 : seq<opt<sor<t_minus, t_not>, a1_expr_L2>, expr_L1> {};
 
     struct a1_expr_L3 : seps{};
     struct expr_L3 : seq<expr_L2, a1_expr_L3, star<sor<t_mult, t_div, t_mod>, seps, expr_L2, a1_expr_L3>> {};
