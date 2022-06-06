@@ -10,8 +10,8 @@ namespace willow::semantics
     {
     public:
         SemanticCube();
-        std::string query(std::string, std::string, std::string);
-        void newType(std::string);
+        std::string query(const std::string &, const std::string &, const std::string &);
+        void newType(const std::string &);
 
     private:
         std::vector<std::vector<std::vector<int>>> semanticMapping;
@@ -20,4 +20,3 @@ namespace willow::semantics
         std::unordered_map<std::string, int> operatorMap;
     };
 }
-

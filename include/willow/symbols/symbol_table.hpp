@@ -16,17 +16,12 @@ namespace willow::symbols
         FUNCTION
     };
 
-    struct Type
-    {
-        std::string name;
-    };
-
-    static const Type NONE_TYPE = {"none"};
+    static const std::string NONE_TYPE = "none";
 
     struct Symbol
     {
-        Type type;
         std::string id;
+        std::string type;
     };
 
     struct Scope
@@ -49,7 +44,7 @@ namespace willow::symbols
         static std::shared_ptr<SymbolTable> instance();
 
         Symbol lookup(std::string);
-        void insert(std::string, Type);
+        void insert(std::string, std::string);
         std::shared_ptr<Scope> createScope(ScopeKind);
         void setScope(std::shared_ptr<Scope>);
         void exitScope();

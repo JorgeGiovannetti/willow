@@ -1,6 +1,8 @@
-#include <willow/semantics/semantic_cube.hpp>
+#include <iostream>
 #include <string>
 #include <vector>
+
+#include <willow/semantics/semantic_cube.hpp>
 
 namespace willow::semantics
 {
@@ -49,7 +51,7 @@ namespace willow::semantics
         semanticMapping[INT][INT][SUM] = INT;
         semanticMapping[INT][FLOAT][SUM] = FLOAT;
         semanticMapping[INT][STRING][SUM] = STRING;
-        
+
         // FLOAT
         semanticMapping[FLOAT][INT][SUM] = FLOAT;
         semanticMapping[FLOAT][FLOAT][SUM] = FLOAT;
@@ -58,13 +60,12 @@ namespace willow::semantics
         semanticMapping[CHAR][INT][SUM] = CHAR;
         semanticMapping[CHAR][CHAR][SUM] = INT;
         semanticMapping[CHAR][STRING][SUM] = STRING;
-        
+
         // STRING
         semanticMapping[STRING][INT][SUM] = STRING;
         semanticMapping[STRING][CHAR][SUM] = STRING;
         semanticMapping[STRING][STRING][SUM] = STRING;
-        
-        
+
         ///////////////
         //   MINUS
         ///////////////
@@ -101,7 +102,6 @@ namespace willow::semantics
         // STRING
         semanticMapping[STRING][INT][MULTIPLY] = STRING;
 
-
         ///////////////
         //   DIVIDE
         ///////////////
@@ -117,7 +117,7 @@ namespace willow::semantics
         ///////////////
         //   MOD
         ///////////////
-        
+
         // INT
         semanticMapping[INT][INT][MOD] = INT;
 
@@ -125,155 +125,155 @@ namespace willow::semantics
         //   LESSER_THAN
         ///////////////
 
-        //INT
+        // INT
         semanticMapping[INT][INT][LESSER_THAN] = BOOL;
         semanticMapping[INT][FLOAT][LESSER_THAN] = BOOL;
 
-        //FLOAT
+        // FLOAT
         semanticMapping[FLOAT][INT][LESSER_THAN] = BOOL;
         semanticMapping[FLOAT][FLOAT][LESSER_THAN] = BOOL;
 
-        //CHAR
+        // CHAR
         semanticMapping[CHAR][CHAR][LESSER_THAN] = BOOL;
 
-        //STRING
+        // STRING
         semanticMapping[STRING][STRING][LESSER_THAN] = BOOL;
 
         ///////////////
         //   GREATER_THAN
         ///////////////
 
-        //INT
+        // INT
         semanticMapping[INT][INT][GREATER_THAN] = BOOL;
         semanticMapping[INT][FLOAT][GREATER_THAN] = BOOL;
 
-        //FLOAT
+        // FLOAT
         semanticMapping[FLOAT][INT][GREATER_THAN] = BOOL;
         semanticMapping[FLOAT][FLOAT][GREATER_THAN] = BOOL;
 
-        //CHAR
+        // CHAR
         semanticMapping[CHAR][CHAR][GREATER_THAN] = BOOL;
 
-        //STRING
+        // STRING
         semanticMapping[STRING][STRING][GREATER_THAN] = BOOL;
 
         ///////////////
         //   LESSER_EQ_THAN
         ///////////////
 
-        //INT
+        // INT
         semanticMapping[INT][INT][LESSER_EQ_THAN] = BOOL;
         semanticMapping[INT][FLOAT][LESSER_EQ_THAN] = BOOL;
 
-        //FLOAT
+        // FLOAT
         semanticMapping[FLOAT][INT][LESSER_EQ_THAN] = BOOL;
         semanticMapping[FLOAT][FLOAT][LESSER_EQ_THAN] = BOOL;
 
-        //CHAR
+        // CHAR
         semanticMapping[CHAR][CHAR][LESSER_EQ_THAN] = BOOL;
 
-        //STRING
+        // STRING
         semanticMapping[STRING][STRING][LESSER_EQ_THAN] = BOOL;
 
         ///////////////
         //   GREATER_EQ_THAN
         ///////////////
 
-        //INT
+        // INT
         semanticMapping[INT][INT][GREATER_EQ_THAN] = BOOL;
         semanticMapping[INT][FLOAT][GREATER_EQ_THAN] = BOOL;
 
-        //FLOAT
+        // FLOAT
         semanticMapping[FLOAT][INT][GREATER_EQ_THAN] = BOOL;
         semanticMapping[FLOAT][FLOAT][GREATER_EQ_THAN] = BOOL;
 
-        //CHAR
+        // CHAR
         semanticMapping[CHAR][CHAR][GREATER_EQ_THAN] = BOOL;
 
-        //STRING
+        // STRING
         semanticMapping[STRING][STRING][GREATER_EQ_THAN] = BOOL;
-        
+
         ///////////////
         //   EQUAL
         ///////////////
 
-        //INT
+        // INT
         semanticMapping[INT][INT][EQUAL] = BOOL;
         semanticMapping[INT][FLOAT][EQUAL] = BOOL;
 
-        //FLOAT
+        // FLOAT
         semanticMapping[FLOAT][INT][EQUAL] = BOOL;
         semanticMapping[FLOAT][FLOAT][EQUAL] = BOOL;
 
-        //CHAR
+        // CHAR
         semanticMapping[CHAR][CHAR][EQUAL] = BOOL;
 
-        //STRING
+        // STRING
         semanticMapping[STRING][STRING][EQUAL] = BOOL;
 
-        //BOOL
+        // BOOL
         semanticMapping[BOOL][BOOL][EQUAL] = BOOL;
 
         ///////////////
         //   NOT_EQUAL
         ///////////////
 
-        //INT
+        // INT
         semanticMapping[INT][INT][NOT_EQUAL] = BOOL;
         semanticMapping[INT][FLOAT][NOT_EQUAL] = BOOL;
 
-        //FLOAT
+        // FLOAT
         semanticMapping[FLOAT][INT][NOT_EQUAL] = BOOL;
         semanticMapping[FLOAT][FLOAT][NOT_EQUAL] = BOOL;
 
-        //CHAR
+        // CHAR
         semanticMapping[CHAR][CHAR][NOT_EQUAL] = BOOL;
 
-        //STRING
+        // STRING
         semanticMapping[STRING][STRING][NOT_EQUAL] = BOOL;
 
-        //BOOL
+        // BOOL
         semanticMapping[BOOL][BOOL][NOT_EQUAL] = BOOL;
-        
+
         ///////////////
         //   ASSIGN
         ///////////////
 
-        //INT
+        // INT
         semanticMapping[INT][INT][ASSIGN] = INT;
 
-        //FLOAT
+        // FLOAT
         semanticMapping[FLOAT][INT][ASSIGN] = FLOAT;
         semanticMapping[FLOAT][FLOAT][ASSIGN] = FLOAT;
 
-        //CHAR
+        // CHAR
         semanticMapping[CHAR][CHAR][ASSIGN] = CHAR;
 
-        //STRING
+        // STRING
         semanticMapping[STRING][STRING][ASSIGN] = STRING;
 
-        //BOOL
+        // BOOL
         semanticMapping[BOOL][BOOL][ASSIGN] = BOOL;
 
         ///////////////
         //   NOT
         ///////////////
-        
-        //BOOL
+
+        // BOOL
         semanticMapping[BOOL][BOOL][NOT] = BOOL;
 
         ///////////////
         //   AND
         ///////////////
-        
-        //BOOL
+
+        // BOOL
         semanticMapping[BOOL][BOOL][AND] = BOOL;
 
         ///////////////
         //   OR
         ///////////////
-        
-        //BOOL
+
+        // BOOL
         semanticMapping[BOOL][BOOL][OR] = BOOL;
 
         ///////////////
@@ -314,17 +314,19 @@ namespace willow::semantics
         operatorMap["="] = 14;
     }
 
-    std::string SemanticCube::query(std::string op1, std::string op2, std::string oper)
+    std::string SemanticCube::query(const std::string &op1, const std::string &op2, const std::string &oper)
     {
         int return_type = semanticMapping[typeStringToInt[op1]][typeStringToInt[op2]][operatorMap[oper]];
+
         if (return_type == ERROR)
         {
-            throw "operator " + oper + " not supported with types " + op1 + " and " + op2;
+            throw std::string("operator " + oper + " not supported with types " + op1 + " and " + op2);
         }
+
         return typeIntToString[return_type];
     }
 
-    void SemanticCube::newType(std::string type_name)
+    void SemanticCube::newType(const std::string &type_name)
     {
         typeIntToString[types_count] = type_name;
         typeStringToInt[type_name] = types_count;

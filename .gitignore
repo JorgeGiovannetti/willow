@@ -6,3 +6,6 @@
 *.app
 
 willow
+
+!src/willow
+!include/willow

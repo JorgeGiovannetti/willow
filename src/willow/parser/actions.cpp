@@ -25,7 +25,8 @@ namespace willow::parser
       operand op1 = state.operandStack.top();
       state.operandStack.pop();
 
-      symbols::Type result_type = {state.sc.query(op1.type.name, op2.type.name, operation)};
+      std::string result_type = state.sc.query(op1.type, op2.type, operation);
+      
       std::string tempAddress = 't' + std::to_string(state.tempCounter++);
       Quadruple quad = {operation, op1.id, op2.id, tempAddress};
       state.quadruples.push_back(quad);
@@ -91,7 +92,7 @@ namespace willow::parser
          {
             state.st->createScope(state.currScopeKind);
          }
-         catch (const char *msg)
+         catch (std::string msg)
          {
             throw pegtl::parse_error(msg, in);
          }
@@ -116,7 +117,15 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         state.operandStack.push({in.string(), willow::symbols::NONE_TYPE});
+         try
+         {
+            willow::symbols::Symbol id_symbol = state.st->lookup(in.string());
+            state.operandStack.push({id_symbol.id, id_symbol.type});
+         }
+         catch (std::string msg)
+         {
+            state.operandStack.push({in.string(), willow::symbols::NONE_TYPE});
+         }
       }
    };
 
@@ -140,7 +149,7 @@ namespace willow::parser
          {
             state.st->insert(state.operandStack.top().id, state.operandStack.top().type);
          }
-         catch (const char *msg)
+         catch (std::string msg)
          {
             throw pegtl::parse_error(msg, in);
          }
@@ -411,15 +420,6 @@ namespace willow::parser
       {
          // TODO: Object Attributes and Arrays
          // Probably should refactor var to just ids and add . and [] operators
-         // try
-         // {
-         //    symbols::Symbol symbol = state.st->lookup(in.string());
-         //    state.operandStack.push({symbol.id, symbol.type});
-         // }
-         // catch (const char *msg)
-         // {
-         //    throw pegtl::parse_error(msg, in);
-         // }
       }
    };
 
@@ -441,7 +441,14 @@ namespace willow::parser
       {
          while (state.operatorStack.top() != "(")
          {
-            addBinaryOperation(state);
+            try
+            {
+               addBinaryOperation(state);
+            }
+            catch (std::string msg)
+            {
+               throw pegtl::parse_error(msg, in);
+            };
          }
 
          // Stack top will always be "(" at this point
@@ -457,7 +464,14 @@ namespace willow::parser
       {
          if (state.operatorStack.top() == "or")
          {
-            addBinaryOperation(state);
+            try
+            {
+               addBinaryOperation(state);
+            }
+            catch (std::string msg)
+            {
+               throw pegtl::parse_error(msg, in);
+            };
          }
       }
    };
@@ -470,7 +484,14 @@ namespace willow::parser
       {
          if (state.operatorStack.top() == "and")
          {
-            addBinaryOperation(state);
+            try
+            {
+               addBinaryOperation(state);
+            }
+            catch (std::string msg)
+            {
+               throw pegtl::parse_error(msg, in);
+            };
          }
       }
    };
@@ -483,7 +504,14 @@ namespace willow::parser
       {
          if (state.operatorStack.top() == "!=" || state.operatorStack.top() == "==")
          {
-            addBinaryOperation(state);
+            try
+            {
+               addBinaryOperation(state);
+            }
+            catch (std::string msg)
+            {
+               throw pegtl::parse_error(msg, in);
+            };
          }
       }
    };
@@ -496,7 +524,14 @@ namespace willow::parser
       {
          if (state.operatorStack.top() == ">=" || state.operatorStack.top() == "<=" || state.operatorStack.top() == ">" || state.operatorStack.top() == "<")
          {
-            addBinaryOperation(state);
+            try
+            {
+               addBinaryOperation(state);
+            }
+            catch (std::string msg)
+            {
+               throw pegtl::parse_error(msg, in);
+            };
          }
       }
    };
@@ -509,7 +544,14 @@ namespace willow::parser
       {
          if (state.operatorStack.top() == "+" || state.operatorStack.top() == "-")
          {
-            addBinaryOperation(state);
+            try
+            {
+               addBinaryOperation(state);
+            }
+            catch (std::string msg)
+            {
+               throw pegtl::parse_error(msg, in);
+            };
          }
       }
    };
@@ -522,7 +564,14 @@ namespace willow::parser
       {
          if (state.operatorStack.top() == "*" || state.operatorStack.top() == "/" || state.operatorStack.top() == "%")
          {
-            addBinaryOperation(state);
+            try
+            {
+               addBinaryOperation(state);
+            }
+            catch (std::string msg)
+            {
+               throw pegtl::parse_error(msg, in);
+            };
          }
       }
    };
@@ -535,7 +584,15 @@ namespace willow::parser
       {
          if (state.operatorStack.top() == "-" || state.operatorStack.top() == "!")
          {
-            addBinaryOperation(state);
+            try
+            {
+               std::cout << "tried out unary operation " << state.operatorStack.top() << std::endl;
+               // addUnaryOperation(state);
+            }
+            catch (std::string msg)
+            {
+               throw pegtl::parse_error(msg, in);
+            };
          }
       }
    };
@@ -573,12 +630,12 @@ namespace willow::parser
 
          try
          {
-            state.sc.query(op1.type.name, op2.type.name, "=");
+            state.sc.query(op1.type, op2.type, "=");
 
             Quadruple quad = {"=", op2.id, "", op1.id};
             state.quadruples.push_back(quad);
          }
-         catch (const char *msg)
+         catch (std::string msg)
          {
             throw pegtl::parse_error(msg, in);
          }
@@ -591,6 +648,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+
          operand op2 = state.operandStack.top();
          state.operandStack.pop();
          operand op1 = state.operandStack.top();
@@ -602,20 +660,24 @@ namespace willow::parser
          {
             if (operation == "*=" || operation == "/=" || operation == "+=" || operation == "-=" || operation == "%=")
             {
+               operation = operation.substr(0, 1);
+
                std::string tempAddress = 't' + std::to_string(state.tempCounter++);
-               Quadruple quad = {operation.substr(0, 1), op1.id, op2.id, tempAddress};
+
+               std::string temp_type = state.sc.query(op1.type, op2.type, operation);
+
+               Quadruple quad = {operation, op1.id, op2.id, tempAddress};
                state.quadruples.push_back(quad);
-               symbols::Type temp_type = op1.type;
-               state.operandStack.push({tempAddress, temp_type});
-               op2 = state.operandStack.top();
+
+               op2 = {tempAddress, temp_type};
             }
 
-            state.sc.query(op1.type.name, op2.type.name, "=");
+            state.sc.query(op1.type, op2.type, "=");
 
             Quadruple quad = {"=", op2.id, "", op1.id};
             state.quadruples.push_back(quad);
          }
-         catch (const char *msg)
+         catch (std::string msg)
          {
             throw pegtl::parse_error(msg, in);
          }
@@ -633,9 +695,9 @@ namespace willow::parser
          operand expr_result = state.operandStack.top();
          state.operandStack.pop();
 
-         if (expr_result.type.name != "bool")
+         if (expr_result.type != "bool")
          {
-            throw "Error: Expected boolean inside \"if-statement\"";
+            throw pegtl::parse_error("Error: Expected boolean inside \"if-statement\"", in);
          }
 
          state.quadruples.push_back({"GOTOF", expr_result.id, "", ""});
@@ -690,9 +752,9 @@ namespace willow::parser
          operand expr_result = state.operandStack.top();
          state.operandStack.pop();
 
-         if (expr_result.type.name != "bool")
+         if (expr_result.type != "bool")
          {
-            throw "Error: Expected boolean inside \"while-loop\" condition";
+            throw pegtl::parse_error("Error: Expected boolean inside \"while-loop\" condition", in);
          }
 
          state.quadruples.push_back({"GOTOF", expr_result.id, "", ""});
@@ -729,9 +791,9 @@ namespace willow::parser
          operand op1 = state.operandStack.top();
          state.operandStack.pop();
 
-         if (op1.type.name != "int" || op2.type.name != "int")
+         if (op1.type != "int" || op2.type != "int")
          {
-            throw "Error: Expected int in for-loop range";
+            throw pegtl::parse_error("Error: Expected int in for-loop range", in);
          }
 
          state.operandStack.push(op1);
@@ -747,9 +809,9 @@ namespace willow::parser
       {
          operand loop_iterator = state.operandStack.top();
 
-         if (loop_iterator.type.name != "int")
+         if (loop_iterator.type != "int")
          {
-            throw "Error: Non-int iterators are not (yet) supported.";
+            throw pegtl::parse_error("Error: Non-int iterators are not (yet) supported.", in);
          }
       }
    };
@@ -787,7 +849,7 @@ namespace willow::parser
          state.operandStack.pop();
 
          std::string tempVar1 = "t" + std::to_string(state.tempCounter++);
-         state.quadruples.push_back({"+", loop_iterator.id, "1", tempVar1}); // TODO: Check how to display constants in quads
+         state.quadruples.push_back({"+", loop_iterator.id, "1", tempVar1});
          state.quadruples.push_back({"=", tempVar1, "", loop_iterator.id});
          state.jumpStack.push(state.quadruples.size() - 1);
 
