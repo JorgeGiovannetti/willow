@@ -111,6 +111,7 @@ namespace willow::parser
          try
          {
             state.st->createScope(state.currScopeKind);
+            state.memory.cacheCurrentMemstate();
          }
          catch (std::string msg)
          {
@@ -126,6 +127,7 @@ namespace willow::parser
       static void apply(const ActionInput &in, State &state)
       {
          state.st->exitScope();
+         state.memory.deallocMemory();
       }
    };
 
