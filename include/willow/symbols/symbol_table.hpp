@@ -14,7 +14,8 @@ namespace willow::symbols
         LOCAL,
         CLASS,
         FUNCTION,
-        TEMP
+        TEMP,
+        CONSTANT
     };
 
     static const std::string NONE_TYPE = "none";

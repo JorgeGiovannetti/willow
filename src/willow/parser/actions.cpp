@@ -25,7 +25,8 @@ namespace willow::parser
 
       std::string result_type = state.sc.query(op1.type, "none", operation);
 
-      int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, result_type, state.memory.typeSizeMap[result_type]);
+      std::cout << "line 28" << std::endl;
+      int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, state.sc.getType(result_type), state.sc.getTypeSize(result_type));
       std::string address_str = '&' + std::to_string(allocatedAddress);
       Quadruple quad = {operation, op1.address, "", address_str};
       state.quadruples.push_back(quad);
@@ -46,7 +47,8 @@ namespace willow::parser
 
       std::string result_type = state.sc.query(op1.type, op2.type, operation);
 
-      int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, result_type, state.memory.typeSizeMap[result_type]);
+      std::cout << "line 50" << std::endl;
+      int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, state.sc.getType(result_type), state.sc.getTypeSize(result_type));
       std::string address_str = '&' + std::to_string(allocatedAddress);
       Quadruple quad = {operation, op1.address, op2.address, address_str};
       state.quadruples.push_back(quad);
@@ -156,7 +158,10 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         int allocatedAddress = state.memory.allocMemory(state.currScopeKind, in.string(), state.memory.typeSizeMap[in.string()]);
+         int type_code = state.sc.getType(in.string());
+         int type_size = state.sc.getTypeSize(type_code);
+         std::cout << "line 163" << std::endl;
+         int allocatedAddress = state.memory.allocMemory(state.currScopeKind, type_code, type_size);
          std::string address_str = '&' + std::to_string(allocatedAddress);
          state.operandStack.top().type = in.string();
          state.operandStack.top().address = address_str;
@@ -686,7 +691,10 @@ namespace willow::parser
 
                std::string temp_type = state.sc.query(op1.type, op2.type, operation);
 
-               int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, temp_type, state.memory.typeSizeMap[temp_type]);
+               int type_code = state.sc.getType(temp_type);
+               std::cout << "line 694" << std::endl;
+               int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, type_code, state.sc.getTypeSize(type_code));
+
                std::string address_str = '&' + std::to_string(allocatedAddress);
 
                state.quadruples.push_back({operation, op1.address, op2.address, address_str});
@@ -854,7 +862,10 @@ namespace willow::parser
          state.quadruples.push_back({"=", range_from.address, "", loop_iterator.address});
 
          std::string temp_type = "int";
-         int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, temp_type, state.memory.typeSizeMap[temp_type]);
+         int type_code = state.sc.getType(temp_type);
+         std::cout << "line 865" << std::endl;
+         int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, type_code, state.sc.getTypeSize(type_code));
+
          std::string address_str = '&' + std::to_string(allocatedAddress);
          state.quadruples.push_back({"<=", loop_iterator.address, range_to.address, address_str});
          state.jumpStack.push(state.quadruples.size() - 1);
@@ -874,7 +885,9 @@ namespace willow::parser
          state.operandStack.pop();
 
          std::string temp_type = "int";
-         int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, temp_type, state.memory.typeSizeMap[temp_type]);
+         int type_code = state.sc.getType(temp_type);
+         std::cout << "line 888" << std::endl;
+         int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, type_code, state.sc.getTypeSize(type_code));
          std::string address_str = '&' + std::to_string(allocatedAddress);
 
          state.quadruples.push_back({"+", loop_iterator.address, "1", address_str});

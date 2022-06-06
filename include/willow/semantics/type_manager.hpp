@@ -4,15 +4,14 @@
 #include <vector>
 #include <unordered_map>
 
-#include "type_manager.hpp"
+#include "willow/symbols/symbol_table.hpp"
 
 namespace willow::semantics
 {
-    class SemanticCube
+    class TypeManager
     {
     public:
-        SemanticCube();
-        std::string query(const std::string &, const std::string &, const std::string &);
+        TypeManager();
         void newType(const std::string &type_name, const int &size);
         std::string getType(int type_code);
         int getType(std::string type_name);
@@ -20,8 +19,8 @@ namespace willow::semantics
         int getTypeSize(int type_code);
 
     private:
-        std::vector<std::vector<std::vector<int>>> semanticMapping;
-        TypeManager typeManager;
-        std::unordered_map<std::string, int> operatorMap;
+        std::unordered_map<std::string, int> typeStringToInt;
+        std::vector<std::string> typeIntToString;
+        std::vector<int> typeSize;
     };
 }
