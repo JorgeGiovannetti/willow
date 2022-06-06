@@ -13,7 +13,7 @@ A concise, statically typed, object-oriented programming language
 - [x] Code Generation of Arithmetic Expressions and Sequential Statements: Assignment, Input, etc.
 - [x] Code Generation of Conditional Statements: Decisions/Loops
 - [ ] Code Generation of Functions
-- [ ] Runtime Memory Mapping for Virtual Machine
+- [x] Runtime Memory Mapping for Virtual Machine
 - [ ] Virtual Machine: Arithmetic Expression and Sequential Statement Execution
 - [ ] Code Generation for Arrays/Structured Types
 - [ ] Virtual Machine: Conditional Statement Execution

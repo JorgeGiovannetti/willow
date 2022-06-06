@@ -7,4 +7,6 @@ fn main() {
 
     str: string = "test";
     str += " added!";
+    
+    a: float = 5 + 8.3;
 }

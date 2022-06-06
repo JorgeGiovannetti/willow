@@ -13,7 +13,6 @@ namespace willow::parser
     {
         currScopeKind = willow::symbols::LOCAL;
         st = SymbolTable::instance();
-        tempCounter = 0;
     }
 
     void State::displayQuadruples()

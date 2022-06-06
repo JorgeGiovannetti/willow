@@ -13,7 +13,9 @@ namespace willow::symbols
         GLOBAL,
         LOCAL,
         CLASS,
-        FUNCTION
+        FUNCTION,
+        TEMP,
+        CONSTANT
     };
 
     static const std::string NONE_TYPE = "none";
@@ -22,6 +24,8 @@ namespace willow::symbols
     {
         std::string id;
         std::string type;
+        std::string address;
+        std::vector<int> dims;
     };
 
     struct Scope
@@ -43,8 +47,8 @@ namespace willow::symbols
         SymbolTable &operator=(SymbolTable const &) = delete;
         static std::shared_ptr<SymbolTable> instance();
 
-        Symbol lookup(std::string);
-        void insert(std::string, std::string);
+        Symbol lookup(std::string id);
+        void insert(std::string id, std::string type, std::string address);
         std::shared_ptr<Scope> createScope(ScopeKind);
         void setScope(std::shared_ptr<Scope>);
         void exitScope();

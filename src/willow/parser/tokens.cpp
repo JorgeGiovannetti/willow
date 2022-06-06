@@ -113,8 +113,7 @@ namespace willow::parser
     struct t_lit_float : seq<plus<digit>, one<'.'>, plus<digit>> {};
     struct t_lit_bool : sor<t_true, t_false> {};
     struct t_lit_char : seq<one<'\''>, any, one<'\''>> {};
-    struct a_lit_string : star<not_at<one<'\"'>>, any> {};
-    struct t_lit_string : seq<one<'\"'>, a_lit_string, one<'\"'>> {};
+    struct t_lit_string : seq<one<'\"'>, until<one<'\"'>>> {};
 
     // Identifier
 

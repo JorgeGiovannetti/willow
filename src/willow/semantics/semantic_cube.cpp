@@ -282,22 +282,6 @@ namespace willow::semantics
         //   UNORDERED_MAPS
         ///////////////
 
-        // TYPES STRING
-        typeStringToInt["none"] = 0;
-        typeStringToInt["int"] = 1;
-        typeStringToInt["float"] = 2;
-        typeStringToInt["bool"] = 3;
-        typeStringToInt["char"] = 4;
-        typeStringToInt["string"] = 5;
-
-        // TYPES INT
-        typeIntToString[0] = "none";
-        typeIntToString[1] = "int";
-        typeIntToString[2] = "float";
-        typeIntToString[3] = "bool";
-        typeIntToString[4] = "char";
-        typeIntToString[5] = "string";
-
         // OPERATORS
         operatorMap["+"] = 0;
         operatorMap["-"] = 1;
@@ -318,21 +302,40 @@ namespace willow::semantics
 
     std::string SemanticCube::query(const std::string &op1, const std::string &op2, const std::string &oper)
     {
-        int return_type = semanticMapping[typeStringToInt[op1]][typeStringToInt[op2]][operatorMap[oper]];
+        int return_type = semanticMapping[typeManager.getType(op1)][typeManager.getType(op2)][operatorMap[oper]];
 
         if (return_type == ERROR)
         {
             throw std::string("operator " + oper + " not supported with types " + op1 + " and " + op2);
         }
 
-        return typeIntToString[return_type];
+        return typeManager.getType(return_type);
     }
 
-    void SemanticCube::newType(const std::string &type_name)
+    void SemanticCube::newType(const std::string &type_name, const int &size)
     {
-        typeIntToString[types_count] = type_name;
-        typeStringToInt[type_name] = types_count;
-        types_count++;
+        typeManager.newType(type_name, size);
         semanticMapping.push_back(std::vector<std::vector<int>>(types_count, std::vector<int>(operator_count, ERROR)));
     }
+
+    std::string SemanticCube::getType(int type_code)
+    {
+        return typeManager.getType(type_code);
+    }
+
+    int SemanticCube::getType(std::string type_name)
+    {
+        return typeManager.getType(type_name);
+    }
+
+    int SemanticCube::getTypeSize(int type_code)
+    {
+        return typeManager.getTypeSize(type_code);
+    }
+
+    int SemanticCube::getTypeSize(std::string type_name)
+    {
+        return typeManager.getTypeSize(type_name);
+    }
+
 }
