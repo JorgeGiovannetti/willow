@@ -44,8 +44,8 @@ namespace willow::parser
     // Functions
 
     struct params_def : if_must<t_paropen, seps, opt<s_var_basic, seps, star<t_comma, seps, s_var_basic, seps>>, t_parclose> {};
-    struct params : seq<t_paropen, seps, opt<expr, star<seps, t_comma, seps, expr>, seps>, t_parclose> {};
     struct funcdef : if_must<t_fn, sepp, identifier, a_open_scope, params_def, seps, opt<t_colon, seps, type>, seps, block_noscopeopen> {};
+    struct params : if_must<t_paropen, seps, opt<expr, star<seps, t_comma, seps, expr>, seps>, t_parclose> {};
     struct main_func : seq<t_fn, sepp, if_must<t_main, seps, t_paropen, seps, t_parclose, seps, block>> {};
     struct func_call : seq<var, params> {};
     struct read_func_call : if_must<t_read, t_paropen, t_parclose> {};

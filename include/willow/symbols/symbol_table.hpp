@@ -22,6 +22,8 @@ namespace willow::symbols
     {
         std::string id;
         std::string type;
+        std::string address;
+        std::vector<int> dims;
     };
 
     struct Scope

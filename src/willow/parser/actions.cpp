@@ -9,6 +9,7 @@
 namespace pegtl = tao::pegtl;
 
 using willow::codegen::Quadruple;
+using willow::symbols::Symbol;
 using namespace willow;
 
 namespace willow::parser
@@ -19,7 +20,7 @@ namespace willow::parser
       std::string operation = state.operatorStack.top();
       state.operatorStack.pop();
       
-      operand op1 = state.operandStack.top();
+      Symbol op1 = state.operandStack.top();
       state.operandStack.pop();
       
 
@@ -37,10 +38,10 @@ namespace willow::parser
       std::string operation = state.operatorStack.top();
       state.operatorStack.pop();
 
-      operand op2 = state.operandStack.top();
+      Symbol op2 = state.operandStack.top();
       state.operandStack.pop();
 
-      operand op1 = state.operandStack.top();
+      Symbol op1 = state.operandStack.top();
       state.operandStack.pop();
 
       std::string result_type = state.sc.query(op1.type, op2.type, operation);
@@ -137,8 +138,7 @@ namespace willow::parser
       {
          try
          {
-            willow::symbols::Symbol id_symbol = state.st->lookup(in.string());
-            state.operandStack.push({id_symbol.id, id_symbol.type});
+            state.operandStack.push(state.st->lookup(in.string()));
          }
          catch (std::string msg)
          {
@@ -638,9 +638,9 @@ namespace willow::parser
             return;
          }
 
-         operand op2 = state.operandStack.top();
+         Symbol op2 = state.operandStack.top();
          state.operandStack.pop();
-         operand op1 = state.operandStack.top();
+         Symbol op1 = state.operandStack.top();
          state.operandStack.pop();
          std::string operation = state.operatorStack.top();
          state.operatorStack.pop();
@@ -666,9 +666,9 @@ namespace willow::parser
       static void apply(const ActionInput &in, State &state)
       {
 
-         operand op2 = state.operandStack.top();
+         Symbol op2 = state.operandStack.top();
          state.operandStack.pop();
-         operand op1 = state.operandStack.top();
+         Symbol op1 = state.operandStack.top();
          state.operandStack.pop();
          std::string operation = state.operatorStack.top();
          state.operatorStack.pop();
@@ -709,7 +709,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         operand expr_result = state.operandStack.top();
+         Symbol expr_result = state.operandStack.top();
          state.operandStack.pop();
 
          if (expr_result.type != "bool")
@@ -767,7 +767,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         operand expr_result = state.operandStack.top();
+         Symbol expr_result = state.operandStack.top();
          state.operandStack.pop();
 
          if (expr_result.type != "bool")
@@ -804,9 +804,9 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         operand op2 = state.operandStack.top();
+         Symbol op2 = state.operandStack.top();
          state.operandStack.pop();
-         operand op1 = state.operandStack.top();
+         Symbol op1 = state.operandStack.top();
          state.operandStack.pop();
 
          if (op1.type != "int" || op2.type != "int")
@@ -825,7 +825,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         operand loop_iterator = state.operandStack.top();
+         Symbol loop_iterator = state.operandStack.top();
 
          if (loop_iterator.type != "int")
          {
@@ -840,11 +840,11 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         operand range_to = state.operandStack.top();
+         Symbol range_to = state.operandStack.top();
          state.operandStack.pop();
-         operand range_from = state.operandStack.top();
+         Symbol range_from = state.operandStack.top();
          state.operandStack.pop();
-         operand loop_iterator = state.operandStack.top(); // Doesn't need pop, we need it on a3
+         Symbol loop_iterator = state.operandStack.top(); // Doesn't need pop, we need it on a3
 
          state.quadruples.push_back({"=", range_from.id, "", loop_iterator.id});
 
@@ -863,7 +863,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         operand loop_iterator = state.operandStack.top();
+         Symbol loop_iterator = state.operandStack.top();
          state.operandStack.pop();
 
          std::string tempVar1 = "t" + std::to_string(state.tempCounter++);
@@ -880,6 +880,42 @@ namespace willow::parser
          state.quadruples[for_false_jump].targetAddress = std::to_string(state.quadruples.size());
       }
    };
+
+   // Functions
+
+   template <>
+   struct action<t_fn>
+   {
+      
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         state.isInFunction = true;
+      }
+   };
+
+   template <>
+   struct action<funcdef>
+   {
+      
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         state.isInFunction = false;
+      }
+   };
+
+   template <>
+   struct action<params_def>
+   {
+      
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         // TODO
+      }
+   };
+
 
    // END
 
