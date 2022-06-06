@@ -71,10 +71,12 @@ namespace willow::semantics
         ///////////////
 
         // INT
+        semanticMapping[INT][NONE][MINUS] = INT;
         semanticMapping[INT][INT][MINUS] = INT;
         semanticMapping[INT][FLOAT][MINUS] = FLOAT;
 
         // FLOAT
+        semanticMapping[FLOAT][NONE][MINUS] = FLOAT;
         semanticMapping[FLOAT][INT][MINUS] = FLOAT;
         semanticMapping[FLOAT][FLOAT][MINUS] = FLOAT;
 
@@ -260,7 +262,7 @@ namespace willow::semantics
         ///////////////
 
         // BOOL
-        semanticMapping[BOOL][BOOL][NOT] = BOOL;
+        semanticMapping[BOOL][NONE][NOT] = BOOL;
 
         ///////////////
         //   AND

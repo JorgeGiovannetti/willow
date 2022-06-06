@@ -1,9 +1,10 @@
 fn main() {
-    x: int = 5;
+    x: int = -5;
 
     x *= x+3*2 % 6;
 
+    y: bool = !true;
+
     str: string = "test";
     str += " added!";
-    
 }

@@ -14,6 +14,24 @@ using namespace willow;
 namespace willow::parser
 {
 
+   void addUnaryOperation(State &state)
+   {
+      std::string operation = state.operatorStack.top();
+      state.operatorStack.pop();
+
+      operand op1 = state.operandStack.top();
+      state.operandStack.pop();
+
+
+      std::string result_type = state.sc.query(op1.type, "none", operation);
+
+      std::string tempAddress = 't' + std::to_string(state.tempCounter++);
+      Quadruple quad = {operation, op1.id, "", tempAddress};
+      state.quadruples.push_back(quad);
+
+      state.operandStack.push({tempAddress, result_type});
+   }
+
    void addBinaryOperation(State &state)
    {
       std::string operation = state.operatorStack.top();
@@ -26,7 +44,7 @@ namespace willow::parser
       state.operandStack.pop();
 
       std::string result_type = state.sc.query(op1.type, op2.type, operation);
-      
+
       std::string tempAddress = 't' + std::to_string(state.tempCounter++);
       Quadruple quad = {operation, op1.id, op2.id, tempAddress};
       state.quadruples.push_back(quad);
@@ -586,8 +604,7 @@ namespace willow::parser
          {
             try
             {
-               std::cout << "tried out unary operation " << state.operatorStack.top() << std::endl;
-               // addUnaryOperation(state);
+               addUnaryOperation(state);
             }
             catch (std::string msg)
             {
