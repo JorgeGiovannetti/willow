@@ -105,7 +105,7 @@ namespace willow::parser
     struct expr_L1 : seq<sor<seq<expr_paropen, seps, expr, seps, expr_parclose>, seq<at<func_call>, func_call>, var, literal, read_func_call>, seps> {};
 
     struct a1_expr_L2 : seps{};
-    struct expr_L2 : seq<opt<sor<t_minus, t_not>, a1_expr_L2>, expr_L1> {};
+    struct expr_L2 : seq<opt<sor<t_minus, t_not>>, expr_L1, a1_expr_L2> {};
 
     struct a1_expr_L3 : seps{};
     struct expr_L3 : seq<expr_L2, a1_expr_L3, star<sor<t_mult, t_div, t_mod>, seps, expr_L2, a1_expr_L3>> {};
@@ -133,7 +133,8 @@ namespace willow::parser
 
     struct top_levels : sor<var_def_stmt, main_func, funcdef, classdef> {};
     struct a_eof : eof {};
-    struct main_grammar : must<seps, sor<seq<imports, star<top_levels, seps>>, plus<top_levels, seps>>, seps, a_eof> {};
+    struct grammar : must<seps, sor<seq<imports, star<top_levels, seps>>, plus<top_levels, seps>>, seps, a_eof> {};
+    struct main_grammar : grammar {};
 
     // clang-format on
 }

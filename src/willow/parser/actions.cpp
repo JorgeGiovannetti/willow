@@ -18,10 +18,10 @@ namespace willow::parser
    {
       std::string operation = state.operatorStack.top();
       state.operatorStack.pop();
-
+      
       operand op1 = state.operandStack.top();
       state.operandStack.pop();
-
+      
 
       std::string result_type = state.sc.query(op1.type, "none", operation);
 
@@ -78,7 +78,7 @@ namespace willow::parser
          try
          {
             pegtl::file_input importedIn(currDirectory + "/" + filepath);
-            pegtl::parse_nested<main_grammar, action>(in, importedIn, state);
+            pegtl::parse_nested<grammar, action>(in, importedIn, state);
          }
          catch (std::filesystem::filesystem_error &e)
          {
@@ -480,7 +480,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         if (state.operatorStack.top() == "or")
+         if (!state.operatorStack.empty() && state.operatorStack.top() == "or")
          {
             try
             {
@@ -500,7 +500,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         if (state.operatorStack.top() == "and")
+         if (!state.operatorStack.empty() && state.operatorStack.top() == "and")
          {
             try
             {
@@ -520,7 +520,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         if (state.operatorStack.top() == "!=" || state.operatorStack.top() == "==")
+         if (!state.operatorStack.empty() && (state.operatorStack.top() == "!=" || state.operatorStack.top() == "=="))
          {
             try
             {
@@ -540,7 +540,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         if (state.operatorStack.top() == ">=" || state.operatorStack.top() == "<=" || state.operatorStack.top() == ">" || state.operatorStack.top() == "<")
+         if (!state.operatorStack.empty() && (state.operatorStack.top() == ">=" || state.operatorStack.top() == "<=" || state.operatorStack.top() == ">" || state.operatorStack.top() == "<"))
          {
             try
             {
@@ -560,7 +560,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         if (state.operatorStack.top() == "+" || state.operatorStack.top() == "-")
+         if (!state.operatorStack.empty() && (state.operatorStack.top() == "+" || state.operatorStack.top() == "-"))
          {
             try
             {
@@ -580,7 +580,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         if (state.operatorStack.top() == "*" || state.operatorStack.top() == "/" || state.operatorStack.top() == "%")
+         if (!state.operatorStack.empty() && (state.operatorStack.top() == "*" || state.operatorStack.top() == "/" || state.operatorStack.top() == "%"))
          {
             try
             {
@@ -600,7 +600,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         if (state.operatorStack.top() == "-" || state.operatorStack.top() == "!")
+         if (!state.operatorStack.empty() && (state.operatorStack.top() == "-" || state.operatorStack.top() == "!"))
          {
             try
             {
@@ -743,6 +743,7 @@ namespace willow::parser
       {
          state.quadruples.push_back({"GOTO", "", "", ""});
          size_t false_jump = state.jumpStack.top();
+         state.jumpStack.pop();
          state.jumpStack.push(state.quadruples.size() - 1);
          state.quadruples[false_jump].targetAddress = std::to_string(state.quadruples.size());
       }
@@ -843,14 +844,14 @@ namespace willow::parser
          state.operandStack.pop();
          operand range_from = state.operandStack.top();
          state.operandStack.pop();
-         operand loop_iterator = state.operandStack.top();
+         operand loop_iterator = state.operandStack.top(); // Doesn't need pop, we need it on a3
 
          state.quadruples.push_back({"=", range_from.id, "", loop_iterator.id});
 
-         state.jumpStack.push(state.quadruples.size());
-
-         std::string tempVar = "t" + std::to_string(state.tempCounter++);
-         state.quadruples.push_back({"<", loop_iterator.id, range_to.id, tempVar});
+         std::string tempVar = "t" + std::to_string(state.tempCounter++);         
+         state.quadruples.push_back({"<=", loop_iterator.id, range_to.id, tempVar});
+         state.jumpStack.push(state.quadruples.size() - 1);
+         
          state.quadruples.push_back({"GOTOF", tempVar, "", ""});
          state.jumpStack.push(state.quadruples.size() - 1);
       }
@@ -868,16 +869,27 @@ namespace willow::parser
          std::string tempVar1 = "t" + std::to_string(state.tempCounter++);
          state.quadruples.push_back({"+", loop_iterator.id, "1", tempVar1});
          state.quadruples.push_back({"=", tempVar1, "", loop_iterator.id});
-         state.jumpStack.push(state.quadruples.size() - 1);
-
-         size_t for_jump = state.jumpStack.top();
-         state.jumpStack.pop();
-
-         state.quadruples.push_back({"GOTO", "", "", std::to_string(for_jump)});
 
          size_t for_false_jump = state.jumpStack.top();
          state.jumpStack.pop();
-         state.quadruples[for_jump].targetAddress = std::to_string(state.quadruples.size());
+
+
+         size_t for_jump = state.jumpStack.top();
+         state.jumpStack.pop();
+         state.quadruples.push_back({"GOTO", "", "", std::to_string(for_jump)});
+         state.quadruples[for_false_jump].targetAddress = std::to_string(state.quadruples.size());
+      }
+   };
+
+   // END
+
+   template <>
+   struct action<main_grammar>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         state.quadruples.push_back({"END", "", "", ""});
       }
    };
 }
