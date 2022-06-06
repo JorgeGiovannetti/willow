@@ -5,6 +5,7 @@
 #include "willow/symbols/function_directory.hpp"
 #include "willow/symbols/class_directory.hpp"
 #include "willow/codegen/quadruple.hpp"
+#include "willow/memory/memory_manager.hpp"
 
 namespace willow::parser
 {
@@ -22,11 +23,11 @@ namespace willow::parser
         willow::symbols::ScopeKind currScopeKind;
         willow::semantics::SemanticCube sc;
         std::shared_ptr<willow::symbols::SymbolTable> st;
-        willow::symbols::FunctionDirectory fd;
-        willow::symbols::ClassDirectory cd;
+        willow::symbols::FunctionDirectory funcdir;
+        willow::symbols::ClassDirectory classdir;
+        willow::memory::MemoryManager memory;
 
         bool isInFunction = false;
-        int tempCounter;
 
         void displayQuadruples();
     };
