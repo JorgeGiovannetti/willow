@@ -1,0 +1,9 @@
+fn main() {
+    x: int = 5;
+
+    x *= x+3*2 % 6;
+
+    str: string = "test";
+    str += " added!";
+    
+}

@@ -1,0 +1,9 @@
+import (
+    "import_test/a.wil"
+)
+
+fn main() {
+    x: int = 5;
+
+    x *= 3 - 1;
+}

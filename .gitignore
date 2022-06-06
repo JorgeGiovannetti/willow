@@ -4,3 +4,8 @@
 *.exe
 *.out
 *.app
+
+willow
+
+!src/willow
+!include/willow
