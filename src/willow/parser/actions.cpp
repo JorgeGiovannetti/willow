@@ -25,7 +25,6 @@ namespace willow::parser
 
       std::string result_type = state.sc.query(op1.type, "none", operation);
 
-      std::cout << "line 28" << std::endl;
       int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, state.sc.getType(result_type), state.sc.getTypeSize(result_type));
       std::string address_str = '&' + std::to_string(allocatedAddress);
       Quadruple quad = {operation, op1.address, "", address_str};
@@ -47,7 +46,6 @@ namespace willow::parser
 
       std::string result_type = state.sc.query(op1.type, op2.type, operation);
 
-      std::cout << "line 50" << std::endl;
       int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, state.sc.getType(result_type), state.sc.getTypeSize(result_type));
       std::string address_str = '&' + std::to_string(allocatedAddress);
       Quadruple quad = {operation, op1.address, op2.address, address_str};
@@ -160,7 +158,7 @@ namespace willow::parser
       {
          int type_code = state.sc.getType(in.string());
          int type_size = state.sc.getTypeSize(type_code);
-         std::cout << "line 163" << std::endl;
+
          int allocatedAddress = state.memory.allocMemory(state.currScopeKind, type_code, type_size);
          std::string address_str = '&' + std::to_string(allocatedAddress);
          state.operandStack.top().type = in.string();
@@ -692,7 +690,6 @@ namespace willow::parser
                std::string temp_type = state.sc.query(op1.type, op2.type, operation);
 
                int type_code = state.sc.getType(temp_type);
-               std::cout << "line 694" << std::endl;
                int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, type_code, state.sc.getTypeSize(type_code));
 
                std::string address_str = '&' + std::to_string(allocatedAddress);
@@ -863,7 +860,7 @@ namespace willow::parser
 
          std::string temp_type = "int";
          int type_code = state.sc.getType(temp_type);
-         std::cout << "line 865" << std::endl;
+
          int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, type_code, state.sc.getTypeSize(type_code));
 
          std::string address_str = '&' + std::to_string(allocatedAddress);
@@ -886,7 +883,7 @@ namespace willow::parser
 
          std::string temp_type = "int";
          int type_code = state.sc.getType(temp_type);
-         std::cout << "line 888" << std::endl;
+
          int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, type_code, state.sc.getTypeSize(type_code));
          std::string address_str = '&' + std::to_string(allocatedAddress);
 
