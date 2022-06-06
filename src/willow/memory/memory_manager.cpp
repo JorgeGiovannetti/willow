@@ -6,11 +6,11 @@ namespace willow::memory
     MemoryManager::MemoryManager()
     {
         typeSizeMap["none"] = 0;
-        typeSizeMap["int"] = 1;
-        typeSizeMap["float"] = 1;
+        typeSizeMap["int"] = 4;
+        typeSizeMap["float"] = 4;
         typeSizeMap["bool"] = 1;
-        typeSizeMap["char"] = 1;
-        typeSizeMap["string"] = 256;
+        typeSizeMap["char"] = 4;
+        typeSizeMap["string"] = 512; // 4 * 128 (128 max length for strings)
     }
 
     int MemoryManager::allocMemory(willow::symbols::ScopeKind scopeKind, std::string type, int size)
