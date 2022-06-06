@@ -11,7 +11,7 @@ A concise, statically typed, object-oriented programming language
 - [x] Basic Variable Semantics: Procedure Directory and Symbol Table
 - [x] Basic Variable Semantics: Semantic Considerations Table
 - [x] Code Generation of Arithmetic Expressions and Sequential Statements: Assignment, Input, etc.
-- [ ] Code Generation of Conditional Statements: Decisions/Loops
+- [x] Code Generation of Conditional Statements: Decisions/Loops
 - [ ] Code Generation of Functions
 - [ ] Runtime Memory Mapping for Virtual Machine
 - [ ] Virtual Machine: Arithmetic Expression and Sequential Statement Execution
