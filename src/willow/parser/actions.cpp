@@ -25,12 +25,12 @@ namespace willow::parser
 
       std::string result_type = state.sc.query(op1.type, "none", operation);
 
-      int allocatedAddress = state.memory.allocMemory(state.currScopeKind, result_type, state.memory.typeSizeMap[result_type]);
-      std::string tempAddress = '&' + std::to_string(allocatedAddress);
-      Quadruple quad = {operation, op1.id, "", tempAddress};
+      int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, result_type, state.memory.typeSizeMap[result_type]);
+      std::string address_str = '&' + std::to_string(allocatedAddress);
+      Quadruple quad = {operation, op1.address, "", address_str};
       state.quadruples.push_back(quad);
 
-      state.operandStack.push({tempAddress, result_type});
+      state.operandStack.push({address_str, result_type, address_str});
    }
 
    void addBinaryOperation(State &state)
@@ -46,12 +46,12 @@ namespace willow::parser
 
       std::string result_type = state.sc.query(op1.type, op2.type, operation);
 
-      int allocatedAddress = state.memory.allocMemory(state.currScopeKind, result_type, state.memory.typeSizeMap[result_type]);
-      std::string tempAddress = '&' + std::to_string(allocatedAddress);
-      Quadruple quad = {operation, op1.id, op2.id, tempAddress};
+      int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, result_type, state.memory.typeSizeMap[result_type]);
+      std::string address_str = '&' + std::to_string(allocatedAddress);
+      Quadruple quad = {operation, op1.address, op2.address, address_str};
       state.quadruples.push_back(quad);
 
-      state.operandStack.push({tempAddress, result_type});
+      state.operandStack.push({address_str, result_type, address_str});
    }
 
    template <typename Rule>
@@ -67,7 +67,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         std::string filepath = state.operandStack.top().id;
+         std::string filepath = state.operandStack.top().id.substr(1, state.operandStack.top().id.length() - 2);
          state.operandStack.pop();
 
          assert(!state.filepathStack.empty());
@@ -156,7 +156,10 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         state.operandStack.top().type = {in.string()};
+         int allocatedAddress = state.memory.allocMemory(state.currScopeKind, in.string(), state.memory.typeSizeMap[in.string()]);
+         std::string address_str = '&' + std::to_string(allocatedAddress);
+         state.operandStack.top().type = in.string();
+         state.operandStack.top().address = address_str;
       }
    };
 
@@ -168,7 +171,8 @@ namespace willow::parser
       {
          try
          {
-            state.st->insert(state.operandStack.top().id, state.operandStack.top().type);
+            const Symbol &operand = state.operandStack.top();
+            state.st->insert(operand.id, operand.type, operand.address);
          }
          catch (std::string msg)
          {
@@ -387,7 +391,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         state.operandStack.push({in.string(), {"int"}});
+         state.operandStack.push({in.string(), "int", in.string()});
       }
    };
 
@@ -397,7 +401,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         state.operandStack.push({in.string(), {"float"}});
+         state.operandStack.push({in.string(), "float", in.string()});
       }
    };
 
@@ -407,7 +411,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         state.operandStack.push({in.string(), {"bool"}});
+         state.operandStack.push({in.string(), "bool", in.string()});
       }
    };
 
@@ -417,17 +421,17 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         state.operandStack.push({in.string(), {"char"}});
+         state.operandStack.push({in.string(), "char", in.string()});
       }
    };
 
    template <>
-   struct action<a_lit_string>
+   struct action<t_lit_string>
    {
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         state.operandStack.push({in.string(), {"string"}});
+         state.operandStack.push({in.string(), "string", in.string()});
       }
    };
 
@@ -651,9 +655,7 @@ namespace willow::parser
          try
          {
             state.sc.query(op1.type, op2.type, "=");
-
-            Quadruple quad = {"=", op2.id, "", op1.id};
-            state.quadruples.push_back(quad);
+            state.quadruples.push_back({"=", op2.address, "", op1.address});
          }
          catch (std::string msg)
          {
@@ -684,18 +686,17 @@ namespace willow::parser
 
                std::string temp_type = state.sc.query(op1.type, op2.type, operation);
 
-               int allocatedAddress = state.memory.allocMemory(state.currScopeKind, temp_type, state.memory.typeSizeMap[temp_type]);
-               std::string tempAddress = '&' + std::to_string(allocatedAddress);
+               int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, temp_type, state.memory.typeSizeMap[temp_type]);
+               std::string address_str = '&' + std::to_string(allocatedAddress);
 
-               Quadruple quad = {operation, op1.id, op2.id, tempAddress};
-               state.quadruples.push_back(quad);
+               state.quadruples.push_back({operation, op1.address, op2.address, address_str});
 
-               op2 = {tempAddress, temp_type};
+               op2 = {address_str, temp_type, address_str};
             }
 
             state.sc.query(op1.type, op2.type, "=");
 
-            Quadruple quad = {"=", op2.id, "", op1.id};
+            Quadruple quad = {"=", op2.address, "", op1.address};
             state.quadruples.push_back(quad);
          }
          catch (std::string msg)
@@ -721,7 +722,7 @@ namespace willow::parser
             throw pegtl::parse_error("Error: Expected boolean inside \"if-statement\"", in);
          }
 
-         state.quadruples.push_back({"GOTOF", expr_result.id, "", ""});
+         state.quadruples.push_back({"GOTOF", expr_result.address, "", ""});
          state.jumpStack.push(state.quadruples.size() - 1);
       }
    };
@@ -779,7 +780,7 @@ namespace willow::parser
             throw pegtl::parse_error("Error: Expected boolean inside \"while-loop\" condition", in);
          }
 
-         state.quadruples.push_back({"GOTOF", expr_result.id, "", ""});
+         state.quadruples.push_back({"GOTOF", expr_result.address, "", ""});
          state.jumpStack.push(state.quadruples.size() - 1);
       }
    };
@@ -850,15 +851,15 @@ namespace willow::parser
          state.operandStack.pop();
          Symbol loop_iterator = state.operandStack.top(); // Doesn't need pop, we need it on a3
 
-         state.quadruples.push_back({"=", range_from.id, "", loop_iterator.id});
+         state.quadruples.push_back({"=", range_from.address, "", loop_iterator.address});
 
          std::string temp_type = "int";
-         int allocatedAddress = state.memory.allocMemory(state.currScopeKind, temp_type, state.memory.typeSizeMap[temp_type]);
-         std::string tempAddress = '&' + std::to_string(allocatedAddress);
-         state.quadruples.push_back({"<=", loop_iterator.id, range_to.id, tempAddress});
+         int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, temp_type, state.memory.typeSizeMap[temp_type]);
+         std::string address_str = '&' + std::to_string(allocatedAddress);
+         state.quadruples.push_back({"<=", loop_iterator.address, range_to.address, address_str});
          state.jumpStack.push(state.quadruples.size() - 1);
 
-         state.quadruples.push_back({"GOTOF", tempAddress, "", ""});
+         state.quadruples.push_back({"GOTOF", address_str, "", ""});
          state.jumpStack.push(state.quadruples.size() - 1);
       }
    };
@@ -873,11 +874,11 @@ namespace willow::parser
          state.operandStack.pop();
 
          std::string temp_type = "int";
-         int allocatedAddress = state.memory.allocMemory(state.currScopeKind, temp_type, state.memory.typeSizeMap[temp_type]);
-         std::string tempAddress = '&' + std::to_string(allocatedAddress);
+         int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, temp_type, state.memory.typeSizeMap[temp_type]);
+         std::string address_str = '&' + std::to_string(allocatedAddress);
 
-         state.quadruples.push_back({"+", loop_iterator.id, "1", tempAddress});
-         state.quadruples.push_back({"=", tempAddress, "", loop_iterator.id});
+         state.quadruples.push_back({"+", loop_iterator.address, "1", address_str});
+         state.quadruples.push_back({"=", address_str, "", loop_iterator.address});
 
          size_t for_false_jump = state.jumpStack.top();
          state.jumpStack.pop();
