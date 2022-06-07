@@ -1,0 +1,14 @@
+
+fn fact_recursive(n: int) {
+    if(n == 1 or n == 2) {
+        return n;
+    }
+    return n * fact_recursive(n - 1);
+}
+
+fn main() {
+
+    result: int = fact_recursive(5);
+
+    write(result);
+}

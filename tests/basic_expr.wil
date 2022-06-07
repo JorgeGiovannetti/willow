@@ -1,0 +1,7 @@
+fn main() {
+    if(true){
+        x: int = 5;
+    } else {
+        x: int = 3;
+    }
+}

@@ -1,0 +1,19 @@
+
+fn fibo_recursive(n: int) {
+    if(n == 0) {
+        return 0;
+    }
+    if(n == 1) {
+        return 1;
+    }
+
+    return fibo_recursive(n-1) + fibo_recursive(n-2);
+}
+
+fn main() {
+
+    result: int = fibo_recursive(20);
+
+    write(result);
+
+}
