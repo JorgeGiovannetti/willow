@@ -12,10 +12,10 @@ namespace willow::symbols
     {
         GLOBAL,
         LOCAL,
-        CLASS,
-        FUNCTION,
         TEMP,
-        CONSTANT
+        CONSTANT,
+        FUNCTION,
+        CLASS
     };
 
     static const std::string NONE_TYPE = "none";

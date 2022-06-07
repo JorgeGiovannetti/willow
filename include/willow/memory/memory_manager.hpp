@@ -22,11 +22,12 @@ namespace willow::memory
         void deallocMemory();
         void cacheCurrentMemstate();
 
-
-    private:
         int maskAddress(int internal_address, willow::symbols::ScopeKind scopeKind, int type_code);
         int typeFromAddress(int address);
         int scopeFromAddress(int address);
+        int internalAddress(int address);
+
+    private:
 
         int scopeMask(willow::symbols::ScopeKind scopeKind);
         int typeMask(int type_code);

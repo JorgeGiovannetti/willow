@@ -52,6 +52,11 @@ namespace willow::memory
         return ((address & 0xf << 28) >> 28);
     }
 
+    int MemoryManager::internalAddress(int address)
+    {
+        return (address & ~(0xfff << 20));
+    }
+
     int MemoryManager::scopeMask(willow::symbols::ScopeKind scopeKind)
     {
         return scopeKind << 28;

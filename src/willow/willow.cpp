@@ -5,6 +5,7 @@
 
 namespace pegtl = tao::pegtl;
 using willow::parser::Parser;
+using willow::vm::VM;
 
 int main(int argc, char *argv[])
 {
@@ -17,6 +18,11 @@ int main(int argc, char *argv[])
 
    Parser parser = Parser();
    parser.parse(argv[1]);
+
+   VM vm = VM();
+
+   vm.loadQuadruples(parser.st.quadruples);
+   vm.run();
 
    return 0;
 }

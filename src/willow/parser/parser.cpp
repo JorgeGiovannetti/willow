@@ -5,18 +5,18 @@
 #include <willow/willow.hpp>
 
 namespace pegtl = tao::pegtl;
-using willow::symbols::SymbolTable;
 
 namespace willow::parser
 {
     Parser::Parser()
     {
+        st = State();
     }
 
     void Parser::parse(const std::string &filepath)
     {
 
-        State st = State();
+        
         std::string currDirectory = std::filesystem::path(filepath).parent_path().string();
         st.filepathStack.push(currDirectory);
 
