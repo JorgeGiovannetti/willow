@@ -1,6 +1,6 @@
 #include <willow/vm/VM.hpp>
 #include <willow/codegen/quadruple.hpp>
-#include "operations.cpp"
+#include "operations/operations.cpp"
 
 namespace willow::vm
 {
@@ -17,21 +17,23 @@ namespace willow::vm
 
     void VM::loadOperations()
     {
-        ops["="] = &assign;
-        ops["+"] = &sum;
-        ops["-"] = &subtract;
-        ops["*"] = &multiply;
-        ops["/"] = &divide;
-        ops["%"] = &modulo;
-        ops[">"] = &greater;
-        ops[">="] = &geq;
-        ops["<"] = &lesser;
-        ops["<="] = &leq;
-        ops["=="] = &eq;
-        ops["WRITE"] = &write;
-        ops["END"] = &endExecution;
-        ops["GOTO"] = &gotoInstruction;
-        ops["GOTOF"] = &gotofInstruction;
+        ops["="] = &operations::assign;
+        ops["+"] = &operations::sum;
+        ops["-"] = &operations::subtract;
+        ops["*"] = &operations::multiply;
+        ops["/"] = &operations::divide;
+        ops["%"] = &operations::modulo;
+        ops[">"] = &operations::greater;
+        ops[">="] = &operations::geq;
+        ops["<"] = &operations::lesser;
+        ops["<="] = &operations::leq;
+        ops["=="] = &operations::eq;
+        ops["write"] = &operations::write;
+        ops["read"] = &operations::read;
+        ops["readln"] = &operations::readln;
+        ops["end"] = &operations::endExecution;
+        ops["goto"] = &operations::gotoInstruction;
+        ops["gotof"] = &operations::gotofInstruction;
     }
 
     void VM::loadQuadruples(std::string filepath)
@@ -66,7 +68,7 @@ namespace willow::vm
         }
     }
 
-    AddressData VM::addressInfo(const int &address)
+    AddressInfo VM::addressInfo(const int &address)
     {
         std::string address_type = typeManager.getType(mm.typeFromAddress(address));
         int address_scope = mm.scopeFromAddress(address);
@@ -74,35 +76,84 @@ namespace willow::vm
         return {address_type, address_scope, internal_address};
     }
 
-    AddressData VM::addressInfo(const std::string &address)
+    AddressInfo VM::addressInfo(const std::string &address)
     {
         return addressInfo(getAddress(address));
     }
 
-    std::string VM::getDataFromMemory(AddressData addressData)
+    VariableData VM::getLiteralData(const std::string &data)
     {
-        if (addressData.scopeKind == willow::symbols::GLOBAL)
+        std::cout << "getliteraldata with data: " << data << std::endl;
+        try
         {
-            return globalMemory[addressData.internal_address];
+            if (data[0] == '\"')
+            {
+                return {"string", data.substr(1, data.length() - 2)};
+            }
+            else if (data[0] == '\'')
+            {
+                return {"char", data.substr(1, data.length() - 2)};
+            }
+            else if (data == "true" || data == "false")
+            {
+                return {"bool", data};
+            }
+            else
+            {
+                return {(std::stof(data) == std::stoi(data) ? "int" : "float"), data};
+            }
         }
-        else if (addressData.scopeKind == willow::symbols::LOCAL)
+        catch (std::invalid_argument e)
         {
-            return memoryStack.top().localMemory[addressData.internal_address];
+            throw std::string("Failed to retrieve literal");
+        }
+    }
+
+    VariableData VM::getVariableData(const std::string &address)
+    {
+        if (isAddress(address))
+        {
+            AddressInfo addressData = addressInfo(address);
+            return {addressData.type, getDataFromMemory(addressData)};
         }
         else
         {
-            return memoryStack.top().tempMemory[addressData.internal_address];
+            return getLiteralData(address);
+        }
+    }
+
+    std::string VM::getDataFromMemory(AddressInfo addressData)
+    {
+        try
+        {
+            if (addressData.scopeKind == willow::symbols::GLOBAL)
+            {
+                return globalMemory[addressData.internal_address];
+            }
+            else if (addressData.scopeKind == willow::symbols::LOCAL)
+            {
+                return memoryStack.top().localMemory[addressData.internal_address];
+            }
+            else
+            {
+                return memoryStack.top().tempMemory[addressData.internal_address];
+            }
+        }
+        catch (std::invalid_argument e)
+        {
+            throw std::string("Failed to retrieve memory at address");
         }
     }
 
     std::string VM::getDataFromMemory(const std::string &address)
     {
-        AddressData addressData = addressInfo(address);
+        AddressInfo addressData = addressInfo(address);
         return getDataFromMemory(addressData);
     }
 
     void VM::setDataInMemory(const std::string &address, std::string data)
     {
+        std::cout << "setting data " << data << " in memory address " << address << " aka memory slot " << mm.internalAddress(getAddress(address)) << std::endl;
         if (!isAddress(address))
         {
             throw std::string("Tried to set data in a non-address");
@@ -112,7 +163,7 @@ namespace willow::vm
             throw std::string("Tried to set non-data in an address");
         }
 
-        AddressData addressData = addressInfo(address);
+        AddressInfo addressData = addressInfo(address);
 
         if (addressData.scopeKind == willow::symbols::GLOBAL)
         {
@@ -139,11 +190,13 @@ namespace willow::vm
             }
             memoryStack.top().tempMemory[addressData.internal_address] = data;
         }
+
+        std::cout << "finished assigning data " << data << " in address " << address << std::endl;
     }
 
     void VM::assignToAddress(std::string src, std::string target)
     {
-        std::cout << "Assign to address" << std::endl;
+        std::cout << "Assign to address " << target << std::endl;
         std::string src_data = src;
 
         if (isAddress(src_data))
@@ -161,14 +214,15 @@ namespace willow::vm
             while (!hasEnded && instruction_pointer < instructions.size())
             {
                 Quadruple currQuad = instructions[instruction_pointer];
+
+                std::cout << "Executing quadruple " << instruction_pointer << " with op " << currQuad.op << std::endl;
+
                 if (!ops.count(currQuad.op))
                 {
                     throw std::string("Invalid operation " + currQuad.op);
                 }
 
                 ops[currQuad.op](this);
-
-                instruction_pointer++;
             }
             std::cout << "Stopped running willow VM" << std::endl;
         }

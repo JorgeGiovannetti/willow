@@ -485,7 +485,7 @@ namespace willow::parser
    };
 
    template <>
-   struct action<expr>
+   struct action<a1_expr>
    {
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
@@ -570,6 +570,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         std::cout << "action at L4" << std::endl;
          if (!state.operatorStack.empty() && (state.operatorStack.top() == "+" || state.operatorStack.top() == "-"))
          {
             try
@@ -610,6 +611,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         std::cout << "action at L2" << std::endl;
          if (!state.operatorStack.empty() && (state.operatorStack.top() == "-" || state.operatorStack.top() == "!"))
          {
             try

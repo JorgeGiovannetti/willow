@@ -19,10 +19,10 @@ int main(int argc, char *argv[])
    Parser parser = Parser();
    parser.parse(argv[1]);
 
-   VM vm = VM();
+   // VM vm = VM();
 
-   vm.loadQuadruples(parser.st.quadruples);
-   vm.run();
+   // vm.loadQuadruples(parser.st.quadruples);
+   // vm.run();
 
    return 0;
 }
