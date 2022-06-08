@@ -142,6 +142,32 @@ def neq(quad):
     memory.assign_to_address(data, quad[3])
     memory.instruction_pointer += 1
 
+def _or(quad):
+    op1 = utils.get_data(quad[1], memory)
+    op2 = utils.get_data(quad[2], memory)
+    
+    data = op1 or op2
+    
+    memory.assign_to_address(data, quad[3])
+    memory.instruction_pointer += 1
+
+def _and(quad):
+    op1 = utils.get_data(quad[1], memory)
+    op2 = utils.get_data(quad[2], memory)
+    
+    data = op1 and op2
+    
+    memory.assign_to_address(data, quad[3])
+    memory.instruction_pointer += 1
+
+def _not(quad):
+    op1 = utils.get_data(quad[1], memory)
+    
+    data = not op1
+    
+    memory.assign_to_address(data, quad[3])
+    memory.instruction_pointer += 1
+
 operations = {
     "goto": goto,
     "gotof": gotof,
@@ -157,7 +183,10 @@ operations = {
     "<": lesser,
     "<=": leq,
     "==": eq,
-    "!=": neq
+    "!=": neq,
+    "or": _or,
+    "and": _and,
+    "!": _not
 }
 
 # Runtime

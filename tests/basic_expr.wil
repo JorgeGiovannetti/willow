@@ -1,5 +1,5 @@
 fn main() {
-    if(false){
+    if(true and !(3 < 5)){
         x: int = 5 * 3 - 5;
     } else {
         x: int = 3 + 4;
