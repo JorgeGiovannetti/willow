@@ -570,7 +570,6 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         std::cout << "action at L4" << std::endl;
          if (!state.operatorStack.empty() && (state.operatorStack.top() == "+" || state.operatorStack.top() == "-"))
          {
             try
@@ -611,8 +610,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         std::cout << "action at L2" << std::endl;
-         if (!state.operatorStack.empty() && (state.operatorStack.top() == "-" || state.operatorStack.top() == "!"))
+         if (!state.operatorStack.empty() && state.operatorStack.top() == "!")
          {
             try
             {

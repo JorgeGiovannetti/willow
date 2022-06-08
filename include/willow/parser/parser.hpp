@@ -12,6 +12,7 @@ namespace willow::parser
     public:
         Parser();
         void parse(const std::string &filepath);
+        void generateObjectFile(const std::string &filepath);
         State st;
     };
 }

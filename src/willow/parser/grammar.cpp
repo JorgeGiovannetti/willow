@@ -105,7 +105,7 @@ namespace willow::parser
     struct expr_L1 : seq<sor<seq<expr_paropen, seps, expr, seps, expr_parclose>, seq<at<func_call>, func_call>, var, literal, read_func_call>, seps> {};
 
     struct a1_expr_L2 : seps{};
-    struct expr_L2 : seq<opt<sor<t_minus, t_not>>, expr_L1, a1_expr_L2> {};
+    struct expr_L2 : seq<opt<t_not>, expr_L1, a1_expr_L2> {};
 
     struct a1_expr_L3 : seps{};
     struct expr_L3 : seq<expr_L2, a1_expr_L3, star<sor<t_mult, t_div, t_mod>, seps, expr_L2, a1_expr_L3>> {};
