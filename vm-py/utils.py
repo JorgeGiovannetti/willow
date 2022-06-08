@@ -26,7 +26,6 @@ def cast_literal(data: str):
 
 def get_data(data: str, memory: Memory):
     if is_address(data):
-        # TODO: Get value from address
-        pass
+        return memory.get_data_from_address(data)
     else:
         return cast_literal(data)

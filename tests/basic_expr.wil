@@ -1,7 +1,7 @@
 fn main() {
     if(false){
-        x: int = 5;
+        x: int = 5 * 3 - 5;
     } else {
-        x: int = 3;
+        x: int = 3 + 4;
     }
 }

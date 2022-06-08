@@ -26,7 +26,7 @@ def goto(quad):
     memory.instruction_pointer = int(quad[3])
 
 def gotof(quad):
-    if quad[1] == False:
+    if not utils.get_data(quad[1], memory):
         goto(quad)
     else:
         memory.instruction_pointer += 1
@@ -43,11 +43,121 @@ def assign(quad):
 
     memory.instruction_pointer += 1
 
+def multiply(quad):
+    op1 = utils.get_data(quad[1], memory)
+    op2 = utils.get_data(quad[2], memory)
+    
+    data = op1 * op2
+    
+    memory.assign_to_address(data, quad[3])
+    memory.instruction_pointer += 1
+
+def divide(quad):
+    op1 = utils.get_data(quad[1], memory)
+    op2 = utils.get_data(quad[2], memory)
+    
+    data = op1 / op2
+    
+    memory.assign_to_address(data, quad[3])
+    memory.instruction_pointer += 1
+
+def modulo(quad):
+    op1 = utils.get_data(quad[1], memory)
+    op2 = utils.get_data(quad[2], memory)
+    
+    data = op1 % op2
+    
+    memory.assign_to_address(data, quad[3])
+    memory.instruction_pointer += 1
+
+def add(quad):
+    op1 = utils.get_data(quad[1], memory)
+    op2 = utils.get_data(quad[2], memory)
+    
+    data = op1 + op2
+    
+    memory.assign_to_address(data, quad[3])
+    memory.instruction_pointer += 1
+
+def subtract(quad):
+    op1 = utils.get_data(quad[1], memory)
+    op2 = utils.get_data(quad[2], memory)
+    
+    data = op1 - op2
+    
+    memory.assign_to_address(data, quad[3])
+    memory.instruction_pointer += 1
+
+def greater(quad):
+    op1 = utils.get_data(quad[1], memory)
+    op2 = utils.get_data(quad[2], memory)
+    
+    data = op1 > op2
+    
+    memory.assign_to_address(data, quad[3])
+    memory.instruction_pointer += 1
+
+def geq(quad):
+    op1 = utils.get_data(quad[1], memory)
+    op2 = utils.get_data(quad[2], memory)
+    
+    data = op1 >= op2
+    
+    memory.assign_to_address(data, quad[3])
+    memory.instruction_pointer += 1
+
+def lesser(quad):
+    op1 = utils.get_data(quad[1], memory)
+    op2 = utils.get_data(quad[2], memory)
+    
+    data = op1 < op2
+    
+    memory.assign_to_address(data, quad[3])
+    memory.instruction_pointer += 1
+
+def leq(quad):
+    op1 = utils.get_data(quad[1], memory)
+    op2 = utils.get_data(quad[2], memory)
+    
+    data = op1 <= op2
+    
+    memory.assign_to_address(data, quad[3])
+    memory.instruction_pointer += 1
+
+def eq(quad):
+    op1 = utils.get_data(quad[1], memory)
+    op2 = utils.get_data(quad[2], memory)
+    
+    data = op1 == op2
+    
+    memory.assign_to_address(data, quad[3])
+    memory.instruction_pointer += 1
+
+def neq(quad):
+    op1 = utils.get_data(quad[1], memory)
+    op2 = utils.get_data(quad[2], memory)
+    
+    data = op1 != op2
+    
+    memory.assign_to_address(data, quad[3])
+    memory.instruction_pointer += 1
+
 operations = {
     "goto": goto,
     "gotof": gotof,
     "end": end,
-    "=": assign
+    "=": assign,
+    "*": multiply,
+    "/": divide,
+    "%": modulo,
+    "+": add,
+    "-": subtract,
+    ">": greater,
+    ">=": geq,
+    "<": lesser,
+    "<=": leq,
+    "==": eq,
+    "!=": neq
 }
 
 # Runtime

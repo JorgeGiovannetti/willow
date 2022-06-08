@@ -38,6 +38,19 @@ class Memory:
         else:
             self.extend_memory(self.memory_stack[self.stack_pointer][segment-1], type_name, data_internal_address)
             self.memory_stack[self.stack_pointer][segment-1][type_name][data_internal_address] = data
+    
+    def get_data_from_address(self, address: str):
+        address = self.get_address(address)
+        segment = self.segment_from_address(address)
+        data_internal_address = self.internal_address(address)
+        type_name = self.type_names[self.type_from_address(address)]
+
+        if self.segment_names[segment] == "global":
+            self.extend_memory(self.global_memory, type_name, data_internal_address)
+            return self.global_memory[type_name][data_internal_address]
+        else:
+            self.extend_memory(self.memory_stack[self.stack_pointer][segment-1], type_name, data_internal_address)
+            return self.memory_stack[self.stack_pointer][segment-1][type_name][data_internal_address]
 
     def get_address(self, address: str):
         return int(address[1:])
