@@ -727,7 +727,7 @@ namespace willow::parser
             throw pegtl::parse_error("Error: Expected boolean inside \"if-statement\"", in);
          }
 
-         state.quadruples.push_back({"GOTOF", expr_result.address, "", ""});
+         state.quadruples.push_back({"gotof", expr_result.address, "", ""});
          state.jumpStack.push(state.quadruples.size() - 1);
       }
    };
@@ -751,7 +751,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         state.quadruples.push_back({"GOTO", "", "", ""});
+         state.quadruples.push_back({"goto", "", "", ""});
          size_t false_jump = state.jumpStack.top();
          state.jumpStack.pop();
          state.jumpStack.push(state.quadruples.size() - 1);
@@ -785,7 +785,7 @@ namespace willow::parser
             throw pegtl::parse_error("Error: Expected boolean inside \"while-loop\" condition", in);
          }
 
-         state.quadruples.push_back({"GOTOF", expr_result.address, "", ""});
+         state.quadruples.push_back({"gotof", expr_result.address, "", ""});
          state.jumpStack.push(state.quadruples.size() - 1);
       }
    };
@@ -801,7 +801,7 @@ namespace willow::parser
          size_t loop_start = state.jumpStack.top();
          state.jumpStack.pop();
 
-         state.quadruples.push_back({"GOTO", "", "", std::to_string(loop_start)});
+         state.quadruples.push_back({"goto", "", "", std::to_string(loop_start)});
          state.quadruples[loop_jump_point].targetAddress = std::to_string(state.quadruples.size());
       }
    };
@@ -867,7 +867,7 @@ namespace willow::parser
          state.quadruples.push_back({"<=", loop_iterator.address, range_to.address, address_str});
          state.jumpStack.push(state.quadruples.size() - 1);
 
-         state.quadruples.push_back({"GOTOF", address_str, "", ""});
+         state.quadruples.push_back({"gotof", address_str, "", ""});
          state.jumpStack.push(state.quadruples.size() - 1);
       }
    };
@@ -895,7 +895,7 @@ namespace willow::parser
 
          size_t for_jump = state.jumpStack.top();
          state.jumpStack.pop();
-         state.quadruples.push_back({"GOTO", "", "", std::to_string(for_jump)});
+         state.quadruples.push_back({"goto", "", "", std::to_string(for_jump)});
          state.quadruples[for_false_jump].targetAddress = std::to_string(state.quadruples.size());
       }
    };
@@ -943,7 +943,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         state.quadruples.push_back({"END", "", "", ""});
+         state.quadruples.push_back({"end", "", "", ""});
       }
    };
 }

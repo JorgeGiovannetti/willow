@@ -1,6 +1,6 @@
 fn main() {
-    if(true){
-        x: int = 5;
+    if(false){
+        x: string = 5;
     } else {
         x: int = 3;
     }
