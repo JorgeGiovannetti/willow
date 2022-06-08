@@ -11,7 +11,7 @@ namespace willow::memory
 
     struct MemoryState
     {
-        std::vector<int> scopePointer;
+        std::vector<std::vector<int>> scopePointer;
     };
 
     class MemoryManager

@@ -4,7 +4,7 @@ def parse_wol(filename: str):
 
     quadruples = []
     for line in obj_file:
-        quadruple = ['a','b','c','d']
+        quadruple = ['','','','']
         quad_index = 0
         is_in_string = False
         temp_str = ''
@@ -21,7 +21,6 @@ def parse_wol(filename: str):
         quadruple[quad_index] = temp_str.replace('\n','')
         quadruples.append(quadruple)
         
-    print('quads', quadruples)
     obj_file.close()
 
     return quadruples

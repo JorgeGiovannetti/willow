@@ -5,16 +5,16 @@ namespace willow::memory
 
     MemoryManager::MemoryManager()
     {
-        for (int i = 0; i <= symbols::CONSTANT; i++)
+        for (int i = 0; i < symbols::CONSTANT; i++)
         {
-            memstate.scopePointer.push_back(0);
+            memstate.scopePointer.push_back(std::vector<int>(6, 0)); // TODO: Instead of 6 types, we'll refactor to dynamically resize given new types
         }
     }
 
     int MemoryManager::allocMemory(willow::symbols::ScopeKind scopeKind, int type_code, int size)
     {
-        int internal_address = memstate.scopePointer[scopeKind];
-        memstate.scopePointer[scopeKind] += size;
+        int internal_address = memstate.scopePointer[scopeKind][type_code];
+        memstate.scopePointer[scopeKind][type_code] += size;
 
         return maskAddress(internal_address, scopeKind, type_code);
     }

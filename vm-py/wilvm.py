@@ -37,9 +37,9 @@ def end(quad):
     memory.instruction_pointer += 1
 
 def assign(quad):
-    data = utils.get_data(quad[1])
+    data = utils.get_data(quad[1], memory)
 
-    # TODO: Assign data to memory address
+    memory.assign_to_address(data, quad[3])
 
     memory.instruction_pointer += 1
 

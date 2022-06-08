@@ -3,9 +3,6 @@ from Memory import Memory
 def is_address(data: str):
     return len(data) > 0 and data[0] == '&'
 
-def get_address(address: str):
-    return address[1:]
-
 def cast_literal(data: str):
     # string
     if data[0] == '"':
