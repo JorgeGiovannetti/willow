@@ -25,7 +25,9 @@ namespace willow::parser
     // Type
 
     struct basic_type : sor<t_int, t_float, t_bool, t_char, t_string> {};
-    struct type : seq<sor<basic_type, t_id>, star<t_bracketopen, seps, t_lit_int, seps, t_bracketclose>> {};
+    struct a_type_openarr : seps {};
+    struct a_type_closearr : seps {};
+    struct type : seq<sor<basic_type, t_id>, star<t_bracketopen, a_type_openarr, t_lit_int, a_type_closearr, t_bracketclose>> {};
 
     // Literals
 

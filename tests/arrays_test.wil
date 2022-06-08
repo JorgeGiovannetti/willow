@@ -1,0 +1,3 @@
+fn main() {
+    arr: int[5];
+}

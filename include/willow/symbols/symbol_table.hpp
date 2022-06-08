@@ -48,7 +48,7 @@ namespace willow::symbols
         static std::shared_ptr<SymbolTable> instance();
 
         Symbol lookup(std::string id);
-        void insert(std::string id, std::string type, std::string address);
+        void insert(std::string id, std::string type, std::string address, std::vector<int> dims);
         std::shared_ptr<Scope> createScope(ScopeKind);
         void setScope(std::shared_ptr<Scope>);
         void exitScope();

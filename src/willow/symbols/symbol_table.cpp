@@ -41,14 +41,14 @@ namespace willow::symbols
         throw std::string("identifier " + id +" is undefined"); // TODO: Create willow errors
     }
 
-    void SymbolTable::insert(std::string id, std::string type, std::string address)
+    void SymbolTable::insert(std::string id, std::string type, std::string address, std::vector<int> dims)
     {
         if (currentScope->symbols.count(id))
         {
             throw std::string("identifier " + id + " is already defined"); // TODO: Create willow errors
         }
 
-        currentScope->symbols[id] = {id, type, address};
+        currentScope->symbols[id] = {id, type, address, dims};
     }
 
     std::shared_ptr<Scope> SymbolTable::createScope(ScopeKind scopeKind)

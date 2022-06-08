@@ -175,7 +175,8 @@ namespace willow::parser
          try
          {
             const Symbol &operand = state.operandStack.top();
-            state.st->insert(operand.id, operand.type, operand.address);
+            state.st->insert(operand.id, operand.type, operand.address, state.currDims);
+            state.currDims.clear();
          }
          catch (std::string msg)
          {
@@ -897,6 +898,20 @@ namespace willow::parser
          state.jumpStack.pop();
          state.quadruples.push_back({"goto", "", "", std::to_string(for_jump)});
          state.quadruples[for_false_jump].targetAddress = std::to_string(state.quadruples.size());
+      }
+   };
+
+   // Arrays
+
+   template <>
+   struct action<a_type_closearr>
+   {
+
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         state.currDims.push_back(std::stoi(state.operandStack.top().id));
+         state.operandStack.pop();
       }
    };
 
