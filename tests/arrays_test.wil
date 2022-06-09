@@ -1,3 +1,5 @@
 fn main() {
-    arr: int[5];
+    arr: int[5][3];
+    arr[0] = 5;
+    arr[1] = 3;
 }

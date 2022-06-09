@@ -9,6 +9,5 @@
 #include "parser/parser.hpp"
 #include "parser/state.hpp"
 #include "memory/memory_manager.hpp"
-#include "vm/VM.hpp"
 
 #endif
