@@ -10,11 +10,6 @@ namespace pegtl = tao::pegtl;
 
 namespace willow::parser
 {
-    Parser::Parser()
-    {
-        st = State();
-    }
-
     void Parser::generateObjectFile(const std::string &filepath)
     {
 

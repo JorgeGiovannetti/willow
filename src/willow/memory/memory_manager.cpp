@@ -1,22 +1,24 @@
+#include <iostream>
+
 #include <willow/memory/memory_manager.hpp>
 
 namespace willow::memory
 {
-
-    MemoryManager::MemoryManager()
+    
+    void MemoryManager::addType()
     {
-        for (int i = 0; i < symbols::CONSTANT; i++)
+        for (auto& typePointer : memstate.segmentPointer)
         {
-            memstate.scopePointer.push_back(std::vector<int>(6, 0)); // TODO: Instead of 6 types, we'll refactor to dynamically resize given new types
+            typePointer.push_back(0);
         }
     }
 
-    int MemoryManager::allocMemory(willow::symbols::ScopeKind scopeKind, int type_code, int size)
+    int MemoryManager::allocMemory(int memorySegment, int type_code, int size)
     {
-        int internal_address = memstate.scopePointer[scopeKind][type_code];
-        memstate.scopePointer[scopeKind][type_code] += size;
-
-        return maskAddress(internal_address, scopeKind, type_code);
+        int internal_address = memstate.segmentPointer[memorySegment][type_code - 1];
+        memstate.segmentPointer[memorySegment][type_code - 1] += size;
+        
+        return maskAddress(internal_address, memorySegment, type_code - 1);
     }
 
     void MemoryManager::deallocMemory()
@@ -37,9 +39,9 @@ namespace willow::memory
         memstateCache.push(memstate);
     }
 
-    int MemoryManager::maskAddress(int internal_address, willow::symbols::ScopeKind scopeKind, int type_code)
+    int MemoryManager::maskAddress(int internal_address, int memorySegment, int type_code)
     {
-        return internal_address | scopeMask(scopeKind) | typeMask(type_code);
+        return internal_address | segmentMask(memorySegment) | typeMask(type_code);
     }
 
     int MemoryManager::typeFromAddress(int address)
@@ -47,7 +49,7 @@ namespace willow::memory
         return ((address & 0xff << 20) >> 20);
     }
 
-    int MemoryManager::scopeFromAddress(int address)
+    int MemoryManager::segmentFromAddress(int address)
     {
         return ((address & 0xf << 28) >> 28);
     }
@@ -57,9 +59,9 @@ namespace willow::memory
         return (address & ~(0xfff << 20));
     }
 
-    int MemoryManager::scopeMask(willow::symbols::ScopeKind scopeKind)
+    int MemoryManager::segmentMask(int memorySegment)
     {
-        return scopeKind << 28;
+        return memorySegment << 28;
     }
 
     int MemoryManager::typeMask(int type_code)

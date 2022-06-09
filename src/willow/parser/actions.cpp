@@ -25,7 +25,7 @@ namespace willow::parser
 
       std::string result_type = state.sc.query(op1.type, "none", operation);
 
-      int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, state.sc.getType(result_type), state.sc.getTypeSize(result_type));
+      int allocatedAddress = state.memory.allocMemory(memory::TEMP, state.sc.getType(result_type), state.sc.getTypeSize(result_type));
       std::string address_str = '&' + std::to_string(allocatedAddress);
       Quadruple quad = {operation, op1.address, "", address_str};
       state.quadruples.push_back(quad);
@@ -34,7 +34,7 @@ namespace willow::parser
    }
 
    void addBinaryOperation(State &state)
-   {
+   {      
       std::string operation = state.operatorStack.top();
       state.operatorStack.pop();
 
@@ -46,7 +46,7 @@ namespace willow::parser
 
       std::string result_type = state.sc.query(op1.type, op2.type, operation);
 
-      int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, state.sc.getType(result_type), state.sc.getTypeSize(result_type));
+      int allocatedAddress = state.memory.allocMemory(memory::TEMP, state.sc.getType(result_type), state.sc.getTypeSize(result_type));
       std::string address_str = '&' + std::to_string(allocatedAddress);
       Quadruple quad = {operation, op1.address, op2.address, address_str};
       state.quadruples.push_back(quad);
@@ -159,7 +159,9 @@ namespace willow::parser
          int type_code = state.sc.getType(in.string());
          int type_size = state.sc.getTypeSize(type_code);
 
-         int allocatedAddress = state.memory.allocMemory(state.currScopeKind, type_code, type_size);
+         int memSegment = state.currScopeKind == symbols::GLOBAL ? memory::GLOBAL : memory::LOCAL;
+
+         int allocatedAddress = state.memory.allocMemory(memSegment, type_code, type_size);
          std::string address_str = '&' + std::to_string(allocatedAddress);
          state.operandStack.top().type = in.string();
          state.operandStack.top().address = address_str;
@@ -691,7 +693,8 @@ namespace willow::parser
                std::string temp_type = state.sc.query(op1.type, op2.type, operation);
 
                int type_code = state.sc.getType(temp_type);
-               int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, type_code, state.sc.getTypeSize(type_code));
+               
+               int allocatedAddress = state.memory.allocMemory(memory::TEMP, type_code, state.sc.getTypeSize(type_code));
 
                std::string address_str = '&' + std::to_string(allocatedAddress);
 
@@ -862,7 +865,7 @@ namespace willow::parser
          std::string temp_type = "int";
          int type_code = state.sc.getType(temp_type);
 
-         int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, type_code, state.sc.getTypeSize(type_code));
+         int allocatedAddress = state.memory.allocMemory(memory::TEMP, type_code, state.sc.getTypeSize(type_code));
 
          std::string address_str = '&' + std::to_string(allocatedAddress);
          state.quadruples.push_back({"<=", loop_iterator.address, range_to.address, address_str});
@@ -885,7 +888,7 @@ namespace willow::parser
          std::string temp_type = "int";
          int type_code = state.sc.getType(temp_type);
 
-         int allocatedAddress = state.memory.allocMemory(symbols::ScopeKind::TEMP, type_code, state.sc.getTypeSize(type_code));
+         int allocatedAddress = state.memory.allocMemory(memory::TEMP, type_code, state.sc.getTypeSize(type_code));
          std::string address_str = '&' + std::to_string(allocatedAddress);
 
          state.quadruples.push_back({"+", loop_iterator.address, "1", address_str});

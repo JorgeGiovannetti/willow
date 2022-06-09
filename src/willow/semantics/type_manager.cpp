@@ -58,7 +58,7 @@ namespace willow::semantics
 
     int TypeManager::getTypeSize(std::string type_name)
     {
-        return typeSize[getType(type_name)];
+        return typeSize[typeStringToInt[type_name]];
     }
 
 }
