@@ -38,14 +38,14 @@ namespace willow::symbols
             }
         }
 
-        throw std::string("identifier " + id +" is undefined"); // TODO: Create willow errors
+        throw std::string("identifier " + id + " is undefined");
     }
 
-    void SymbolTable::insert(std::string id, std::string type, std::string address, std::vector<int> dims)
+    void SymbolTable::insert(std::string id, std::string type, std::string address, std::vector<Dim> dims)
     {
         if (currentScope->symbols.count(id))
         {
-            throw std::string("identifier " + id + " is already defined"); // TODO: Create willow errors
+            throw std::string("identifier " + id + " is already defined");
         }
 
         currentScope->symbols[id] = {id, type, address, dims};
@@ -55,7 +55,7 @@ namespace willow::symbols
     {
         if (scopeKind == GLOBAL)
         {
-            throw std::string("INTERNAL ERROR: CANNOT DEFINE A GLOBAL SCOPE"); // TODO: Create willow errors
+            throw std::string("INTERNAL ERROR: CANNOT DEFINE A GLOBAL SCOPE");
         }
 
         std::shared_ptr<Scope> scope = std::make_shared<Scope>(scopeCounter, scopeKind);

@@ -17,6 +17,7 @@ namespace willow::parser
 
    std::string addDimsToType(std::string type, std::vector<Dim> dims, int currDim) 
    {
+      std::cout << "addDimsToType got type " << type << " and currDim is " << currDim << std::endl; 
       for(int i = currDim; i < dims.size(); i++)
       {
          type += "[" + std::to_string(dims[i].size) + "]";
@@ -181,7 +182,7 @@ namespace willow::parser
 
          for(int i = state.currDims.size() - 2; i >= 0; i--)
          {
-            state.currDims[i] *= state.currDims[i + 1];
+            state.currDims[i].displacement_size *= state.currDims[i + 1].displacement_size;
          }
 
          int type_code = state.sc.getType(state.currType);
@@ -195,9 +196,9 @@ namespace willow::parser
          state.currDims.clear();
 
          int dims_size = 1;
-         for (int dim : state.operandStack.top().dims)
+         for (Dim dim : state.operandStack.top().dims)
          {
-            dims_size *= dim;
+            dims_size *= dim.size;
          }
 
          int allocatedAddress = state.memory.allocMemory(memSegment, type_code, type_size * dims_size);
@@ -731,7 +732,7 @@ namespace willow::parser
 
                op2 = {address_str, temp_type, address_str};
 
-               op2_type_with_dims = addDimsToType(op2.type, op2.dims);
+               op2_type_with_dims = addDimsToType(op2.type, op2.dims, state.currDimPosition);
             }
 
             state.sc.query(op1_type_with_dims, op2_type_with_dims, "=");
@@ -970,23 +971,29 @@ namespace willow::parser
             throw std::string("Array index is not an integer, got " + state.operandStack.top().type);
          }
 
-         if(state.operandStack.top().dims.empty())
+         if(state.operandStack.top().dims.empty() || state.currDimPosition >= state.operandStack.top().dims.size())
          {
             throw std::string("Subscripted value is not an array");
          }
 
          Dim currDim = state.operandStack.top().dims[state.currDimPosition];
 
-         state.quadruples.push_back("ver", indexed_value.address, currDimSize, state.operandStack.top().address);
+         state.quadruples.push_back({"ver", indexed_value.address, std::to_string(currDim.size), state.operandStack.top().address});
 
          int type_code = state.sc.getType("int");
          int allocatedAddress = state.memory.allocMemory(memory::TEMP, type_code, state.sc.getTypeSize(type_code));
          std::string address_str = '&' + std::to_string(allocatedAddress);
-         state.quadruples.push_back("*", std::to_string(indexed_value.id), std::to_string(currDim.displacement_size), address_str);
+         state.quadruples.push_back({"*", indexed_value.id, std::to_string(currDim.displacement_size), address_str});
 
-         // TODO: Store ptr and load later
-
+         // Alloc memory of type & (pointer)
+         int pointerAddress = state.memory.allocMemory(memory::TEMP, state.sc.getType("&"), state.sc.getTypeSize(type_code));
+         std::string pointerAddress_str = "&" + std::to_string(pointerAddress);
+         state.quadruples.push_back({"&save", address_str, state.operandStack.top().address, pointerAddress_str});
          
+         // Get value from displaced address and store in temp 
+         // state.quadruples.push_back("&get", pointerAddress_str, "", )
+
+         // Increase currPosition
          state.currDimPosition++;
       }
    };
