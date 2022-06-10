@@ -961,7 +961,7 @@ namespace willow::parser
             throw std::string("Array index is not an integer, got " + indexed_value.type);
          }
 
-         const Symbol& operand = state.operandStack.top();
+         Symbol& operand = state.operandStack.top();
 
          if (operand.dims.empty() || operand.currDimPosition >= operand.dims.size())
          {
@@ -986,7 +986,7 @@ namespace willow::parser
          // state.quadruples.push_back("&get", pointerAddress_str, "", )
 
          // Increase currDimPosition
-         state.currDimPosition++;
+         operand.currDimPosition++;
       }
    };
 
@@ -996,17 +996,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput& in, State& state)
       {
-         state.currDimPosition = 0;
-      }
-   };
-
-   template <>
-   struct action<var>
-   {
-      template <typename ActionInput>
-      static void apply(const ActionInput& in, State& state)
-      {
-         state.currDimPosition = 0;
+         // TODO
       }
    };
 

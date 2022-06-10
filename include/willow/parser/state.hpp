@@ -29,7 +29,6 @@ namespace willow::parser
         willow::symbols::ClassDirectory classdir;
         willow::memory::MemoryManager memory;
         std::vector<willow::symbols::Dim> currDims;
-        int currDimPosition;
         std::string currType;
 
         bool isInFunction;

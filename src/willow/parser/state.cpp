@@ -13,7 +13,6 @@ namespace willow::parser
     {
         currScopeKind = willow::symbols::LOCAL;
         st = SymbolTable::instance();
-        currDimPosition = 0;
         isInClass = false;
         isInFunction = false;
     }
