@@ -31,7 +31,7 @@ namespace willow::symbols
         std::string type;
         std::string address;
         std::vector<Dim> dims;
-        int currDim = 0;
+        int currDimPosition = 0;
     };
 
     struct Scope

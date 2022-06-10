@@ -48,6 +48,10 @@ namespace willow::semantics
 
     int TypeManager::getType(std::string type_name)
     {
+        if(type_name == "&")
+        {
+            return 0;
+        }
         return typeStringToInt[type_name];
     }
 
@@ -58,6 +62,10 @@ namespace willow::semantics
 
     int TypeManager::getTypeSize(std::string type_name)
     {
+        if(type_name == "&")
+        {
+            return 1;
+        }
         return typeSize[typeStringToInt[type_name]];
     }
 

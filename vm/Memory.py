@@ -1,8 +1,8 @@
 class Memory:
 
     def __init__(self):
-        self.global_memory = {"int": [], "float": [], "bool": [], "char": [], "string": []}
-        self.type_names = ["none", "int", "float", "bool", "char", "string"]
+        self.global_memory = {"&": [], "int": [], "float": [], "bool": [], "char": [], "string": []}
+        self.type_names = ["&", "int", "float", "bool", "char", "string"]
         self.segment_names = ["global", "local", "temp"]
         self.instruction_pointer = 0
         self.stack_pointer = 0
@@ -21,6 +21,7 @@ class Memory:
             return False
         if type_name == "char" or type_name == "string":
             return ''
+        return '&'
 
     def extend_memory(self, memory_segment, type_name, internal_address):
         while len(memory_segment[type_name]) <= internal_address:
@@ -56,7 +57,7 @@ class Memory:
         return int(address[1:])
     
     def push_memory_stack(self):
-        self.memory_stack.append({"int": [], "float": [], "bool": [], "char": [], "string": []})
+        self.memory_stack.append({"&": [], "int": [], "float": [], "bool": [], "char": [], "string": []})
 
     def segment_mask(self, segment: int):
         return segment << 28

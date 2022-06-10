@@ -15,10 +15,10 @@ namespace willow::memory
 
     int MemoryManager::allocMemory(int memorySegment, int type_code, int size)
     {
-        int internal_address = memstate.segmentPointer[memorySegment][type_code - 1];
-        memstate.segmentPointer[memorySegment][type_code - 1] += size;
+        int internal_address = memstate.segmentPointer[memorySegment][type_code];
+        memstate.segmentPointer[memorySegment][type_code] += size;
         
-        return maskAddress(internal_address, memorySegment, type_code - 1);
+        return maskAddress(internal_address, memorySegment, type_code);
     }
 
     void MemoryManager::deallocMemory()
