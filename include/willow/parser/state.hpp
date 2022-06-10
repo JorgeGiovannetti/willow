@@ -28,9 +28,12 @@ namespace willow::parser
         willow::symbols::FunctionDirectory funcdir;
         willow::symbols::ClassDirectory classdir;
         willow::memory::MemoryManager memory;
-        std::vector<int> currDims;
+        std::vector<willow::symbols::Dim> currDims;
+        int currDimPosition;
+        std::string currType;
 
-        bool isInFunction = false;
+        bool isInFunction;
+        bool isInClass;
 
         void displayQuadruples();
     };

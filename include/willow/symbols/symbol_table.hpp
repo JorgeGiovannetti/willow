@@ -20,12 +20,17 @@ namespace willow::symbols
 
     static const std::string NONE_TYPE = "none";
 
+   struct Dim {
+      int size;
+      int displacement_size;
+   };
+
     struct Symbol
     {
         std::string id;
         std::string type;
         std::string address;
-        std::vector<int> dims;
+        std::vector<Dim> dims;
     };
 
     struct Scope

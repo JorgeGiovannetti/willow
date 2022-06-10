@@ -10,10 +10,19 @@ namespace pegtl = tao::pegtl;
 
 using willow::codegen::Quadruple;
 using willow::symbols::Symbol;
-using namespace willow;
+using willow::symbols::Dim;
 
 namespace willow::parser
 {
+
+   std::string addDimsToType(std::string type, std::vector<Dim> dims, int currDim) 
+   {
+      for(int i = currDim; i < dims.size(); i++)
+      {
+         type += "[" + std::to_string(dims[i].size) + "]";
+      }
+      return type;
+   }
 
    void addUnaryOperation(State &state)
    {
@@ -44,7 +53,10 @@ namespace willow::parser
       Symbol op1 = state.operandStack.top();
       state.operandStack.pop();
 
-      std::string result_type = state.sc.query(op1.type, op2.type, operation);
+      std::string op1_type_with_dims = addDimsToType(op1.type, op1.dims, state.currDimPosition);
+      std::string op2_type_with_dims = addDimsToType(op2.type, op2.dims, state.currDimPosition);
+
+      std::string result_type = state.sc.query(op1_type_with_dims, op2_type_with_dims, operation);
 
       int allocatedAddress = state.memory.allocMemory(memory::TEMP, state.sc.getType(result_type), state.sc.getTypeSize(result_type));
       std::string address_str = '&' + std::to_string(allocatedAddress);
@@ -151,19 +163,46 @@ namespace willow::parser
    };
 
    template <>
-   struct action<s_var_type>
+   struct action<type>
    {
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         int type_code = state.sc.getType(in.string());
+         state.currType = in.string();
+      }
+   };
+
+   template <>
+   struct action<structured_type>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+
+         for(int i = state.currDims.size() - 2; i >= 0; i--)
+         {
+            state.currDims[i] *= state.currDims[i + 1];
+         }
+
+         int type_code = state.sc.getType(state.currType);
          int type_size = state.sc.getTypeSize(type_code);
 
          int memSegment = state.currScopeKind == symbols::GLOBAL ? memory::GLOBAL : memory::LOCAL;
 
-         int allocatedAddress = state.memory.allocMemory(memSegment, type_code, type_size);
+         state.operandStack.top().type = state.currType;
+         state.operandStack.top().dims = state.currDims;
+
+         state.currDims.clear();
+
+         int dims_size = 1;
+         for (int dim : state.operandStack.top().dims)
+         {
+            dims_size *= dim;
+         }
+
+         int allocatedAddress = state.memory.allocMemory(memSegment, type_code, type_size * dims_size);
          std::string address_str = '&' + std::to_string(allocatedAddress);
-         state.operandStack.top().type = in.string();
+
          state.operandStack.top().address = address_str;
       }
    };
@@ -177,8 +216,7 @@ namespace willow::parser
          try
          {
             const Symbol &operand = state.operandStack.top();
-            state.st->insert(operand.id, operand.type, operand.address, state.currDims);
-            state.currDims.clear();
+            state.st->insert(operand.id, operand.type, operand.address, operand.dims);
          }
          catch (std::string msg)
          {
@@ -444,17 +482,6 @@ namespace willow::parser
    // Expressions
 
    template <>
-   struct action<var>
-   {
-      template <typename ActionInput>
-      static void apply(const ActionInput &in, State &state)
-      {
-         // TODO: Object Attributes and Arrays
-         // Probably should refactor var to just ids and add . and [] operators
-      }
-   };
-
-   template <>
    struct action<expr_paropen>
    {
       template <typename ActionInput>
@@ -677,12 +704,17 @@ namespace willow::parser
       static void apply(const ActionInput &in, State &state)
       {
 
-         Symbol op2 = state.operandStack.top();
-         state.operandStack.pop();
-         Symbol op1 = state.operandStack.top();
-         state.operandStack.pop();
-         std::string operation = state.operatorStack.top();
-         state.operatorStack.pop();
+      std::string operation = state.operatorStack.top();
+      state.operatorStack.pop();
+
+      Symbol op2 = state.operandStack.top();
+      state.operandStack.pop();
+
+      Symbol op1 = state.operandStack.top();
+      state.operandStack.pop();
+
+      std::string op1_type_with_dims = addDimsToType(op1.type, op1.dims, state.currDimPosition);
+      std::string op2_type_with_dims = addDimsToType(op2.type, op2.dims, state.currDimPosition);
 
          try
          {
@@ -690,20 +722,19 @@ namespace willow::parser
             {
                operation = operation.substr(0, 1);
 
-               std::string temp_type = state.sc.query(op1.type, op2.type, operation);
+               std::string temp_type = state.sc.query(op1_type_with_dims, op2_type_with_dims, operation);
 
-               int type_code = state.sc.getType(temp_type);
-               
-               int allocatedAddress = state.memory.allocMemory(memory::TEMP, type_code, state.sc.getTypeSize(type_code));
-
+               int allocatedAddress = state.memory.allocMemory(memory::TEMP, state.sc.getType(temp_type), state.sc.getTypeSize(temp_type));
                std::string address_str = '&' + std::to_string(allocatedAddress);
-
-               state.quadruples.push_back({operation, op1.address, op2.address, address_str});
+               Quadruple quad = {operation, op1.address, op2.address, address_str};
+               state.quadruples.push_back(quad);
 
                op2 = {address_str, temp_type, address_str};
+
+               op2_type_with_dims = addDimsToType(op2.type, op2.dims);
             }
 
-            state.sc.query(op1.type, op2.type, "=");
+            state.sc.query(op1_type_with_dims, op2_type_with_dims, "=");
 
             Quadruple quad = {"=", op2.address, "", op1.address};
             state.quadruples.push_back(quad);
@@ -913,8 +944,88 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         state.currDims.push_back(std::stoi(state.operandStack.top().id));
+         int dimSize = std::stoi(state.operandStack.top().id);
+         if(dimSize <= 0)
+         {
+            throw std::string("Declared array dimension with a non-positive size");
+         }
+
+         state.currDims.push_back({dimSize, 1});
          state.operandStack.pop();
+      }
+   };
+   
+   template <>
+   struct action<a_var_bracketclose>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+
+         Symbol indexed_value = state.operandStack.top();
+         state.operandStack.pop();
+
+         if(indexed_value.type != "int")
+         {
+            throw std::string("Array index is not an integer, got " + state.operandStack.top().type);
+         }
+
+         if(state.operandStack.top().dims.empty())
+         {
+            throw std::string("Subscripted value is not an array");
+         }
+
+         Dim currDim = state.operandStack.top().dims[state.currDimPosition];
+
+         state.quadruples.push_back("ver", indexed_value.address, currDimSize, state.operandStack.top().address);
+
+         int type_code = state.sc.getType("int");
+         int allocatedAddress = state.memory.allocMemory(memory::TEMP, type_code, state.sc.getTypeSize(type_code));
+         std::string address_str = '&' + std::to_string(allocatedAddress);
+         state.quadruples.push_back("*", std::to_string(indexed_value.id), std::to_string(currDim.displacement_size), address_str);
+
+         // TODO: Store ptr and load later
+
+         
+         state.currDimPosition++;
+      }
+   };
+
+   template <>
+   struct action<a_var_dot>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         state.currDimPosition = 0;
+      }
+   };
+
+   template <>
+   struct action<var>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         state.currDimPosition = 0;
+      }
+   };
+
+   // Classes
+
+   template <>
+   struct action<t_this>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         if(!state.isInClass && state.isInFunction)
+         {
+            throw std::string("Invalid use of 'this' outside of a member function");
+         }
+
+         // TODO
+
       }
    };
 
@@ -923,7 +1034,6 @@ namespace willow::parser
    template <>
    struct action<t_fn>
    {
-
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
