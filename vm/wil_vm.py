@@ -87,11 +87,11 @@ def write(quad):
     memory.instruction_pointer += 1
 
 def read(quad):
-    data = utils.get_data(quad[1], memory)
+    data = input()
 
     casted_data = utils.cast_to_type(data, memory.typename_from_address(quad[3]))
 
-    memory.assign_to_address(data, quad[3])
+    memory.assign_to_address(casted_data, quad[3])
 
     memory.instruction_pointer += 1
 
@@ -260,7 +260,6 @@ operations = {
 
 while is_running and memory.instruction_pointer < len(quadruples):
     quad = quadruples[memory.instruction_pointer]
-    print('Running quadruple', memory.instruction_pointer, quad)
     
     try:
         operations[quad[0]](quad)

@@ -53,7 +53,7 @@ namespace willow::parser
     struct main_func : seq<t_fn, sepp, if_must<t_main, seps, t_paropen, seps, t_parclose, seps, block>> {};
     struct func_call : seq<var, params> {};
     struct read_func_call : if_must<t_read, t_paropen, t_parclose> {};
-    struct write_func_call : if_must<t_write, params> {};
+    struct write_func_call : if_must<t_write, t_paropen, expr, t_parclose> {};
     struct funcs : seq<sor<read_func_call, write_func_call, func_call>, t_semicolon> {};
 
     // Classes

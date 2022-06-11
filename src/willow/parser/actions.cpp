@@ -1107,6 +1107,47 @@ namespace willow::parser
       }
    };
 
+   // I/O Functions
+
+   template <>
+   struct action<read_func_call>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         int allocatedAddress = state.memory.allocMemory(memory::TEMP, state.sc.getType("string"), state.sc.getTypeSize("string"), false);
+         std::string address_str = '&' + std::to_string(allocatedAddress);
+         Quadruple quad = {"read", "", "", address_str};
+         state.quadruples.push_back(quad);
+
+         state.operandStack.push({address_str, "string", address_str});
+      }
+   };
+
+   template <>
+   struct action<write_func_call>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         Symbol op1 = state.operandStack.top();
+         state.operandStack.pop();
+
+         if (state.memory.isPointer(op1.address))
+         {
+            // Get value from pointer address and store in temp
+            int valueType = state.sc.getType(op1.type);
+            int valueAddress = state.memory.allocMemory(memory::TEMP, valueType, state.sc.getTypeSize(valueType), false);
+            std::string valueAddress_str = "&" + std::to_string(valueAddress);
+            state.quadruples.push_back({"&get", op1.address, "", valueAddress_str});
+
+            op1 = {valueAddress_str, op1.type, valueAddress_str};
+         }
+
+         state.quadruples.push_back({"write", "", "", op1.address});
+      }
+   };
+
    // Functions
 
    template <>
