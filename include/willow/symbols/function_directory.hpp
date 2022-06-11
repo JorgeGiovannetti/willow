@@ -16,6 +16,7 @@ namespace willow::symbols
         std::vector<Symbol> params;
         std::string return_type;
         int size;
+        int location;
     };
 
     class FunctionDirectory
@@ -23,6 +24,7 @@ namespace willow::symbols
     public:
         FunctionSignature lookup(std::string);
         void insert(FunctionSignature);
+        std::unordered_map<std::string, FunctionSignature> getFunctions();
 
     private:
         std::unordered_map<std::string, FunctionSignature> functions;

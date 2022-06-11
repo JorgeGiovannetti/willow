@@ -9,6 +9,10 @@ class Memory:
         self.call_stack = []
         self.memory_stack = [[self.init_nonglobal_memory(),self.init_nonglobal_memory()]]
 
+    def add_type(self, type_name: str):
+        self.global_memory[type_name] = []
+        self.type_names.append(type_name)
+
     def init_nonglobal_memory(self):
         return {type_name : [] for type_name in self.type_names}
 

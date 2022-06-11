@@ -3,3 +3,5 @@ import (
 )
 
 a_import_var: int = 3;
+
+writeln("Hi this is file a!");

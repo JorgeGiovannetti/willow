@@ -9,7 +9,10 @@
 namespace pegtl = tao::pegtl;
 
 using willow::codegen::Quadruple;
+using willow::symbols::Attribute;
+using willow::symbols::ClassSignature;
 using willow::symbols::Dim;
+using willow::symbols::FunctionSignature;
 using willow::symbols::Symbol;
 
 namespace willow::parser
@@ -111,7 +114,7 @@ namespace willow::parser
    {
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
-      {
+      {         
          std::string filepath = state.operandStack.top().id.substr(1, state.operandStack.top().id.length() - 2);
          state.operandStack.pop();
 
@@ -208,6 +211,16 @@ namespace willow::parser
    };
 
    template <>
+   struct action<s_var_basic_type>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         state.currType = in.string();
+      }
+   };
+
+   template <>
    struct action<structured_type>
    {
       template <typename ActionInput>
@@ -251,6 +264,25 @@ namespace willow::parser
          try
          {
             const Symbol &operand = state.operandStack.top();
+            state.st->insert(operand.id, operand.type, operand.address, operand.dims);
+         }
+         catch (std::string msg)
+         {
+            throw pegtl::parse_error(msg, in);
+         }
+      }
+   };
+
+   template <>
+   struct action<s_var_basic>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         try
+         {
+            Symbol &operand = state.operandStack.top();
+            operand.type = state.currType;
             state.st->insert(operand.id, operand.type, operand.address, operand.dims);
          }
          catch (std::string msg)
@@ -624,7 +656,6 @@ namespace willow::parser
       {
          if (!state.operatorStack.empty() && (state.operatorStack.top() == ">=" || state.operatorStack.top() == "<=" || state.operatorStack.top() == ">" || state.operatorStack.top() == "<"))
          {
-            std::cout << "trying < for some godforsaken reason with operand top as " << state.operandStack.top().id << std::endl;
             try
             {
                addBinaryOperation(state);
@@ -910,7 +941,6 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         std::cout << "range dot pushing " << state.quadruples.size() << std::endl;
          state.jumpStack.push(state.quadruples.size());
       }
    };
@@ -923,8 +953,15 @@ namespace willow::parser
       {
          Symbol op2 = state.operandStack.top();
          state.operandStack.pop();
+
          Symbol op1 = state.operandStack.top();
          state.operandStack.pop();
+
+         if (state.jumpStack.top() == state.quadruples.size())
+         {
+            state.jumpStack.pop();
+            state.jumpStack.push(state.quadruples.size() + 1);
+         }
 
          if (op1.type != "int" || op2.type != "int")
          {
@@ -1099,16 +1136,115 @@ namespace willow::parser
    };
 
    template <>
-   struct action<a_var_dot>
+   struct action<a_var_dotid>
    {
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         // TODO
+         Symbol operand = state.operandStack.top();
+         state.operandStack.pop();
+
+         ClassSignature var_class = state.classdir.lookup(operand.type);
+
+         if (!var_class.attributes.count(in.string()))
+         {
+            throw pegtl::parse_error("Attribute " + in.string() + " is not a part of type " + operand.type, in);
+         }
+
+         Attribute attr = var_class.attributes[in.string()];
+
+         if (attr.access == "-")
+         {
+            throw pegtl::parse_error("Cannot access private attribute " + in.string() + " outside of its class " + operand.type, in);
+         }
+
+         // Alloc memory of type & (pointer)
+         int valueType = state.sc.getType(attr.type);
+
+         int pointerAddress = state.memory.allocMemory(memory::TEMP, state.sc.getTypeSize(valueType), state.sc.getTypeSize(valueType), true);
+         std::string pointerAddress_str = "&" + std::to_string(pointerAddress);
+         state.quadruples.push_back({"&disp", operand.address, std::to_string(attr.position), pointerAddress_str});
+
+         std::cout << "alloccing pointer of type " << attr.type << " from variable address " << operand.address << std::endl;
+
+         // Push indexed-value address
+         state.operandStack.push({pointerAddress_str, attr.type, pointerAddress_str});
       }
    };
 
    // Classes
+
+   template <>
+   struct action<memberaccess>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         state.currMemberAccess = in.string();
+      }
+   };
+
+   template <>
+   struct action<classattr>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         Symbol attrop = state.operandStack.top();
+         state.operandStack.pop();
+
+         std::cout << "adding attribute " << attrop.id << " of type " << attrop.type << std::endl;
+
+         Attribute attr;
+
+         attr.access = state.currMemberAccess;
+         attr.address = attrop.address;
+         attr.currDimPosition = attrop.currDimPosition;
+         attr.dims = attrop.dims;
+         attr.id = attrop.id;
+         attr.type = attrop.type;
+
+         state.classdir.addAttribute(state.sc.typeManager, state.isInClass, attr);
+      }
+   };
+
+   template <>
+   struct action<classdef>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         state.isInClass = "";
+      }
+   };
+
+   template <>
+   struct action<a1_classdef>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         state.isInClass = in.string();
+         state.classdir.insert({in.string()});
+         state.st->createScope(symbols::CLASS);
+         state.currScopeKind = symbols::CLASS;
+      }
+   };
+
+   template <>
+   struct action<a2_classdef>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         ClassSignature parentClass = state.classdir.lookup(in.string());
+
+         for (const auto &[key, attr] : parentClass.attributes)
+         {
+            state.classdir.addAttribute(state.sc.typeManager, state.isInClass, attr);
+         }
+      }
+   };
 
    template <>
    struct action<t_this>
@@ -1116,7 +1252,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         if (!state.isInClass && state.isInFunction)
+         if (state.isInClass != "" && state.isInFunction)
          {
             throw std::string("Invalid use of 'this' outside of a member function");
          }
@@ -1172,8 +1308,6 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         std::cout << "operand top at length enter " << state.operandStack.top().address << std::endl;
-
          Symbol op1 = state.operandStack.top();
          state.operandStack.pop();
 
@@ -1188,8 +1322,6 @@ namespace willow::parser
          state.quadruples.push_back({"=", std::to_string(op1.dims[op1.currDimPosition].size), "", valueAddress_str});
 
          state.operandStack.push({valueAddress_str, "int", valueAddress_str});
-
-         std::cout << "operand top out of length " << state.operandStack.top().address << std::endl;
       }
    };
 

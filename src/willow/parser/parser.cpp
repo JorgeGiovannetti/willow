@@ -16,8 +16,28 @@ namespace willow::parser
         std::string outFilepath = std::filesystem::path(filepath).filename().replace_extension("wol").string();
 
         std::ofstream file;
-        
+
         file.open(outFilepath);
+
+        // Output classes
+        for (const auto &[key, value] : st.classdir.getClasses())
+        {
+            file << key << " " << value.size << std::endl;
+        }
+
+        // Separator
+        file << "<%>" << std::endl;
+
+        // Output functions
+        for (const auto &[key, value] : st.funcdir.getFunctions())
+        {
+            file << key << " " << value.location << std::endl;
+        }
+
+        // Separator
+        file << "<%>" << std::endl;
+
+        // Output quadruples
         for (Quadruple quad : st.quadruples)
         {
             file << quad.to_string() << std::endl;

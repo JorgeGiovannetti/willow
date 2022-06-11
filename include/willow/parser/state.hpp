@@ -30,9 +30,10 @@ namespace willow::parser
         willow::memory::MemoryManager memory;
         std::vector<willow::symbols::Dim> currDims;
         std::string currType;
+        std::string currMemberAccess;
 
         bool isInFunction;
-        bool isInClass;
+        std::string isInClass;
 
         void displayQuadruples();
     };

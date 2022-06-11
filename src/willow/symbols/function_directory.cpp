@@ -23,4 +23,9 @@ namespace willow::symbols
 
         return functions[id];
     }
+
+    std::unordered_map<std::string, FunctionSignature> FunctionDirectory::getFunctions()
+    {
+        return functions;
+    }
 }

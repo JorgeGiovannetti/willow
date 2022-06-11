@@ -13,6 +13,7 @@ namespace willow::semantics
     public:
         TypeManager();
         void newType(const std::string &type_name, const int &size);
+        int increaseSize(const std::string &type_name, const int &size);
         std::string getType(int type_code);
         int getType(std::string type_name);
         int getTypeSize(std::string type_name);

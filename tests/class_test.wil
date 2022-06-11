@@ -1,0 +1,12 @@
+
+class Point {
+    + x: int;
+    + y: int;
+}
+
+fn main() {
+    p: Point;
+
+    p.x = 5;
+    p.y = 4;
+}

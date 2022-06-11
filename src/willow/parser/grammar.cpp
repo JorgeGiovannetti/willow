@@ -38,7 +38,8 @@ namespace willow::parser
     struct a_var_bracketopen : t_bracketopen {};
     struct a_var_bracketclose : t_bracketclose {};
     struct a_var_dot : t_dot {};
-    struct var : seq<sor<identifier, t_this>, star<sor<seq<a_var_bracketopen, expr, a_var_bracketclose>, seq<t_dot, identifier>>>> {};
+    struct a_var_dotid : t_id {};
+    struct var : seq<sor<identifier, t_this>, star<sor<seq<a_var_bracketopen, expr, a_var_bracketclose>, seq<a_var_dot, a_var_dotid>>>> {};
     struct s_var_basic_type : basic_type {};
     struct s_var : seq<identifier, seps, t_colon, seps, structured_type> {};
     struct s_var_basic : seq<identifier, seps, t_colon, seps, s_var_basic_type> {};
@@ -57,16 +58,18 @@ namespace willow::parser
     struct writeln_func_call : if_must<t_writeln, t_paropen, expr, t_parclose> {};
     struct length_func_call : if_must<t_length, t_paropen, expr, t_parclose> {};
     struct builtin_func_call : sor<read_func_call, length_func_call> {};
-    struct funcs : seq<sor<writeln_func_call, write_func_call, builtin_func_call, func_call>, t_semicolon> {};
+    struct funcs : seq<sor<writeln_func_call, write_func_call, builtin_func_call, func_call>, seps, t_semicolon> {};
 
     // Classes
 
     struct memberaccess : sor<one<'+'>, one<'-'>> {};
-    struct classattr : seq<memberaccess, seps, var_def_stmt> {};
+    struct classattr : seq<memberaccess, seps, s_var_basic, seps, t_semicolon> {};
     struct classmethod : seq<memberaccess, seps, funcdef> {};
     struct classmembers : seq<star<classattr, seps>, star<classmethod, seps>> {};
 
-    struct classdef : if_must<t_class, sepp, identifier, seps, opt<t_arrow, seps, identifier, seps>, t_braceopen, a_open_scope, classmembers, t_braceclose> {};
+    struct a1_classdef : t_id {};
+    struct a2_classdef : t_id {};
+    struct classdef : if_must<t_class, sepp, a1_classdef, seps, opt<t_arrow, seps, a2_classdef, seps>, t_braceopen, a_open_scope, classmembers, t_braceclose> {};
 
     // Conditionals
 
@@ -139,7 +142,7 @@ namespace willow::parser
 
     // Entry Point
 
-    struct top_levels : sor<var_def_stmt, main_func, funcdef, classdef> {};
+    struct top_levels : sor<var_def_stmt, funcs, main_func, funcdef, classdef> {};
     struct a_eof : eof {};
     struct grammar : must<seps, sor<seq<imports, star<top_levels, seps>>, plus<top_levels, seps>>, seps, a_eof> {};
     struct main_grammar : grammar {};

@@ -3,9 +3,7 @@ a: int;
 fn main() {
     arr: int[5][3];
 
-    n: int = 2+3;
-
-    for(i: int -> 0..n) {
+    for(i: int -> 0..5) {
         writeln(i);
     }
 

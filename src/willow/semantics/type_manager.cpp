@@ -37,14 +37,26 @@ namespace willow::semantics
     void TypeManager::newType(const std::string &type_name, const int &size)
     {
 
-        if(typeIntToString.size() == 255)
+        if (typeIntToString.size() == 255)
         {
             throw std::string("Type limit reached");
+        }
+
+        if(typeStringToInt.count(type_name))
+        {
+            throw std::string("Tried to create type " + type_name + ", which already exists");
         }
 
         typeIntToString.push_back(type_name);
         typeStringToInt[type_name] = typeIntToString.size();
         typeSize.push_back(size);
+    }
+
+    int TypeManager::increaseSize(const std::string &type_name, const int &size)
+    {
+        int type_code = typeStringToInt[type_name];
+        typeSize[type_code] += size;
+        return typeSize[type_code];
     }
 
     std::string TypeManager::getType(int type_code)
@@ -54,7 +66,7 @@ namespace willow::semantics
 
     int TypeManager::getType(std::string type_name)
     {
-        if(type_name == "&")
+        if (type_name == "&")
         {
             return 0;
         }
@@ -68,7 +80,7 @@ namespace willow::semantics
 
     int TypeManager::getTypeSize(std::string type_name)
     {
-        if(type_name == "&")
+        if (type_name == "&")
         {
             return 1;
         }

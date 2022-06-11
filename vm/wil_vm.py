@@ -18,7 +18,10 @@ is_running = True
 
 # Load quadruples
 
-quadruples = parse_wol(filename)
+classDir, funcDir, quadruples = parse_wol(filename)
+
+for key in classDir:
+    memory.add_type(key)
 
 # Operations
 
@@ -47,6 +50,12 @@ def ver(quad):
     memory.instruction_pointer += 1
 
 def ptr_displace(quad):
+
+    a = memory.get_address(quad[1])
+    print('displace got address', a)
+    print('displace got internal address', memory.internal_address(a))
+    print('displace got type address', memory.type_from_address(a))
+
     op1 = utils.get_data(quad[1], memory)
     op2 = memory.get_address(quad[2])
 
@@ -177,8 +186,6 @@ def leq(quad):
     op1 = utils.get_data(quad[1], memory)
     op2 = utils.get_data(quad[2], memory)
     
-    print('leq with', op1, 'and', op2)
-
     data = op1 <= op2
     
     memory.assign_to_address(data, quad[3])
