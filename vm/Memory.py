@@ -76,3 +76,6 @@ class Memory:
 
     def internal_address(self, address: int):
         return address & ~(0xfff << 20)
+    
+    def is_pointer(self, address: int):
+        return self.type_from_address(address) == 0

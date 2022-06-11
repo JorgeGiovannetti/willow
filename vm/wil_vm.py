@@ -36,6 +36,38 @@ def end(quad):
     is_running = False
     memory.instruction_pointer += 1
 
+def ver(quad):
+    op1 = utils.get_data(quad[1], memory)
+    op2 = utils.get_data(quad[2], memory)
+
+    if op1 < 0 or op1 >= op2:
+        print('Error: Array index out of bounds')
+        exit(1)
+    
+    memory.instruction_pointer += 1
+
+def ptr_save(quad):
+    op1 = utils.get_data(quad[1], memory)
+    op2 = memory.get_address(quad[2])
+    
+    data = op1 + op2
+    
+    memory.assign_to_address('&' + str(data), quad[3])
+
+    memory.instruction_pointer += 1
+
+def ptr_get(quad):
+    address = utils.get_data(quad[1], memory)
+
+    print('ptr_get got address', address)
+
+    data = utils.get_data(address, memory)
+    print('ptr_get got data', data)
+
+    memory.assign_to_address(data, quad[3])
+
+    memory.instruction_pointer += 1
+
 def assign(quad):
     data = utils.get_data(quad[1], memory)
 
@@ -169,24 +201,27 @@ def _not(quad):
     memory.instruction_pointer += 1
 
 operations = {
-    "goto": goto,
-    "gotof": gotof,
-    "end": end,
-    "=": assign,
-    "*": multiply,
-    "/": divide,
-    "%": modulo,
-    "+": add,
-    "-": subtract,
-    ">": greater,
-    ">=": geq,
-    "<": lesser,
-    "<=": leq,
-    "==": eq,
-    "!=": neq,
-    "or": _or,
-    "and": _and,
-    "!": _not
+    'goto': goto,
+    'gotof': gotof,
+    'end': end,
+    'ver': ver,
+    '&save': ptr_save,
+    '&get': ptr_get,
+    '=': assign,
+    '*': multiply,
+    '/': divide,
+    '%': modulo,
+    '+': add,
+    '-': subtract,
+    '>': greater,
+    '>=': geq,
+    '<': lesser,
+    '<=': leq,
+    '==': eq,
+    '!=': neq,
+    'or': _or,
+    'and': _and,
+    '!': _not
 }
 
 # Runtime
