@@ -50,12 +50,6 @@ def ver(quad):
     memory.instruction_pointer += 1
 
 def ptr_displace(quad):
-
-    a = memory.get_address(quad[1])
-    print('displace got address', a)
-    print('displace got internal address', memory.internal_address(a))
-    print('displace got type address', memory.type_from_address(a))
-
     op1 = utils.get_data(quad[1], memory)
     op2 = memory.get_address(quad[2])
 

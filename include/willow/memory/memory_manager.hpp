@@ -18,7 +18,7 @@ namespace willow::memory
     struct MemoryState
     {
         std::vector<std::vector<int>> segmentPointer;
-        MemoryState() : segmentPointer(3, std::vector<int>(5, 0)) {}
+        MemoryState() : segmentPointer(3, std::vector<int>(6, 0)) {}
     };
 
     class MemoryManager

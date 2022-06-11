@@ -1,12 +1,19 @@
 
-class Point {
+class Vector {
     + x: int;
     + y: int;
+    + z: int;
 }
 
 fn main() {
-    p: Point;
+    v: Vector;
 
-    p.x = 5;
-    p.y = 4;
+    v.x = 5;
+    v.y = 4;
+    v.z = 3;
+
+    sumOfComponents: int = v.x + v.y + v.z;
+
+    write("Sum of components: ");
+    writeln(sumOfComponents);
 }

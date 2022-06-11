@@ -1,16 +1,19 @@
 class Memory:
 
     def __init__(self):
-        self.global_memory = {'int': [], 'float': [], 'bool': [], 'char': [], 'string': []}
-        self.type_names = ['int', 'float', 'bool', 'char', 'string']
+        self.global_memory = {'none': [], 'int': [], 'float': [], 'bool': [], 'char': [], 'string': []}
+        self.type_names = ['none', 'int', 'float', 'bool', 'char', 'string']
         self.segment_names = ['global', 'local', 'temp']
         self.instruction_pointer = 0
         self.stack_pointer = 0
         self.call_stack = []
-        self.memory_stack = [[self.init_nonglobal_memory(),self.init_nonglobal_memory()]]
+        self.memory_stack = [[self.init_nonglobal_memory(),self.init_nonglobal_memory(), self.init_nonglobal_memory()]]
 
     def add_type(self, type_name: str):
         self.global_memory[type_name] = []
+        for mem_stack_el in self.memory_stack:
+            for segment in mem_stack_el:
+                segment[type_name] = []
         self.type_names.append(type_name)
 
     def init_nonglobal_memory(self):
@@ -60,7 +63,7 @@ class Memory:
         return int(address[1:])
     
     def push_memory_stack(self):
-        self.memory_stack.append({'int': [], 'float': [], 'bool': [], 'char': [], 'string': []})
+        self.memory_stack.append(self.init_nonglobal_memory())
 
     def segment_mask(self, segment: int):
         return segment << 29

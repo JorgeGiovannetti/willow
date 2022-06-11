@@ -232,6 +232,8 @@ namespace willow::parser
             state.currDims[i].displacement_size = state.currDims[i + 1].size * state.currDims[i + 1].displacement_size;
          }
 
+         std::cout << "state currtype " << state.currType << std::endl;
+
          int type_code = state.sc.getType(state.currType);
          int type_size = state.sc.getTypeSize(type_code);
 
@@ -248,8 +250,10 @@ namespace willow::parser
             dims_size *= dim.size;
          }
 
+         std::cout << "alloccing memory in segment " << memSegment << " with type " << type_code << " and dims_size " << dims_size << std::endl;
          int allocatedAddress = state.memory.allocMemory(memSegment, type_code, type_size * dims_size, false);
          std::string address_str = '&' + std::to_string(allocatedAddress);
+         std::cout << "allocced " << address_str << std::endl;
 
          state.operandStack.top().address = address_str;
       }
@@ -1144,6 +1148,13 @@ namespace willow::parser
          Symbol operand = state.operandStack.top();
          state.operandStack.pop();
 
+         std::cout << "accessing attribute " << in.string() << " from variable " << operand.id << std::endl;
+         std::cout << "address of variable is " << operand.address << std::endl;
+         int v_addrs = std::stoi(operand.address.substr(1));
+         std::cout << "int address of variable is " << v_addrs << std::endl;
+         std::cout << "type of variable from address is " << state.memory.typeFromAddress(v_addrs) << std::endl;
+
+
          ClassSignature var_class = state.classdir.lookup(operand.type);
 
          if (!var_class.attributes.count(in.string()))
@@ -1163,7 +1174,7 @@ namespace willow::parser
 
          int pointerAddress = state.memory.allocMemory(memory::TEMP, state.sc.getTypeSize(valueType), state.sc.getTypeSize(valueType), true);
          std::string pointerAddress_str = "&" + std::to_string(pointerAddress);
-         state.quadruples.push_back({"&disp", operand.address, std::to_string(attr.position), pointerAddress_str});
+         state.quadruples.push_back({"&disp", std::to_string(attr.position), operand.address, pointerAddress_str});
 
          std::cout << "alloccing pointer of type " << attr.type << " from variable address " << operand.address << std::endl;
 
@@ -1214,6 +1225,8 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         state.sc.newType(state.isInClass, state.classdir.lookup(state.isInClass).size);
+         state.memory.addType();
          state.isInClass = "";
       }
    };

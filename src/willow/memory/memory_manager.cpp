@@ -15,10 +15,12 @@ namespace willow::memory
 
     int MemoryManager::allocMemory(int memorySegment, int type_code, int size, bool isPointer)
     {
-        int internal_address = memstate.segmentPointer[memorySegment][type_code - 1];
-        memstate.segmentPointer[memorySegment][type_code - 1] += size;
+        int internal_address = memstate.segmentPointer[memorySegment][type_code];
+        
+        std::cout << "alloccing with internal_address " << internal_address << std::endl;
+        memstate.segmentPointer[memorySegment][type_code] += size;
 
-        return maskAddress(internal_address, memorySegment, type_code - 1, isPointer);
+        return maskAddress(internal_address, memorySegment, type_code, isPointer);
     }
 
     void MemoryManager::deallocMemory()
@@ -56,6 +58,7 @@ namespace willow::memory
 
     int MemoryManager::typeFromAddress(int address)
     {
+        std::cout << "typefromaddress got address" << address << " so type is " << ((address & 0xff << 21) >> 21) << std::endl;
         return ((address & 0xff << 21) >> 21);
     }
 
