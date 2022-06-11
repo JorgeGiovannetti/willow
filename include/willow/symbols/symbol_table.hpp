@@ -59,6 +59,7 @@ namespace willow::symbols
         void setScope(std::shared_ptr<Scope>);
         void exitScope();
         void deleteScope(std::shared_ptr<Scope>);
+        ScopeKind getCurrentScopeKind();
 
     private:
         size_t scopeCounter;

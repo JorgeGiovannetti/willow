@@ -71,6 +71,7 @@ namespace willow::parser
     struct t_if : TAO_PEGTL_STRING("if") {};
     struct t_import : TAO_PEGTL_STRING("import") {};
     struct t_int : TAO_PEGTL_STRING("int") {};
+    struct t_length : TAO_PEGTL_STRING("length") {};
     struct t_main : TAO_PEGTL_STRING("main") {};
     struct t_read : TAO_PEGTL_STRING("read") {};
     struct t_return : TAO_PEGTL_STRING("return") {};
@@ -95,6 +96,7 @@ namespace willow::parser
               t_if,
               t_import,
               t_int,
+              t_length,
               t_main,
               t_read,
               t_return,

@@ -155,6 +155,7 @@ namespace willow::parser
       {
          try
          {
+            state.currScopeKind = symbols::LOCAL;
             state.st->createScope(state.currScopeKind);
             state.memory.cacheCurrentMemstate(false);
          }
@@ -172,6 +173,7 @@ namespace willow::parser
       static void apply(const ActionInput &in, State &state)
       {
          state.st->exitScope();
+         state.currScopeKind = state.st->getCurrentScopeKind();
          state.memory.deallocMemory();
       }
    };
@@ -534,7 +536,14 @@ namespace willow::parser
          {
             try
             {
-               addBinaryOperation(state);
+               if (state.operatorStack.top() == "!")
+               {
+                  addUnaryOperation(state);
+               }
+               else
+               {
+                  addBinaryOperation(state);
+               }
             }
             catch (std::string msg)
             {
@@ -615,6 +624,7 @@ namespace willow::parser
       {
          if (!state.operatorStack.empty() && (state.operatorStack.top() == ">=" || state.operatorStack.top() == "<=" || state.operatorStack.top() == ">" || state.operatorStack.top() == "<"))
          {
+            std::cout << "trying < for some godforsaken reason with operand top as " << state.operandStack.top().id << std::endl;
             try
             {
                addBinaryOperation(state);
@@ -698,6 +708,7 @@ namespace willow::parser
 
          if (state.operatorStack.empty() || state.operatorStack.top() != "=")
          {
+            state.operandStack.pop();
             return;
          }
 
@@ -899,6 +910,17 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         std::cout << "range dot pushing " << state.quadruples.size() << std::endl;
+         state.jumpStack.push(state.quadruples.size());
+      }
+   };
+
+   template <>
+   struct action<a2_for_range>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
          Symbol op2 = state.operandStack.top();
          state.operandStack.pop();
          Symbol op1 = state.operandStack.top();
@@ -924,7 +946,7 @@ namespace willow::parser
 
          if (loop_iterator.type != "int")
          {
-            throw pegtl::parse_error("Error: Non-int iterators are not (yet) supported.", in);
+            throw pegtl::parse_error("Error: Non-int iterators are not (yet) supported", in);
          }
       }
    };
@@ -943,14 +965,11 @@ namespace willow::parser
 
          state.quadruples.push_back({"=", range_from.address, "", loop_iterator.address});
 
-         std::string temp_type = "int";
-         int type_code = state.sc.getType(temp_type);
-
+         int type_code = state.sc.getType("bool");
          int allocatedAddress = state.memory.allocMemory(memory::TEMP, type_code, state.sc.getTypeSize(type_code), false);
-
          std::string address_str = '&' + std::to_string(allocatedAddress);
+
          state.quadruples.push_back({"<=", loop_iterator.address, range_to.address, address_str});
-         state.jumpStack.push(state.quadruples.size() - 1);
 
          state.quadruples.push_back({"gotof", address_str, "", ""});
          state.jumpStack.push(state.quadruples.size() - 1);
@@ -966,8 +985,7 @@ namespace willow::parser
          Symbol loop_iterator = state.operandStack.top();
          state.operandStack.pop();
 
-         std::string temp_type = "int";
-         int type_code = state.sc.getType(temp_type);
+         int type_code = state.sc.getType("int");
 
          int allocatedAddress = state.memory.allocMemory(memory::TEMP, type_code, state.sc.getTypeSize(type_code), false);
          std::string address_str = '&' + std::to_string(allocatedAddress);
@@ -997,7 +1015,7 @@ namespace willow::parser
          int dimSize = std::stoi(state.operandStack.top().id);
          if (dimSize <= 0)
          {
-            throw std::string("Declared array dimension with a non-positive size");
+            throw pegtl::parse_error("Declared array dimension with a non-positive size", in);
          }
 
          state.currDims.push_back({dimSize, 1});
@@ -1107,7 +1125,7 @@ namespace willow::parser
       }
    };
 
-   // I/O Functions
+   // Built-in Functions
 
    template <>
    struct action<read_func_call>
@@ -1145,6 +1163,33 @@ namespace willow::parser
          }
 
          state.quadruples.push_back({"writeln", "", "", op1.address});
+      }
+   };
+
+   template <>
+   struct action<length_func_call>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         std::cout << "operand top at length enter " << state.operandStack.top().address << std::endl;
+
+         Symbol op1 = state.operandStack.top();
+         state.operandStack.pop();
+
+         if (op1.dims.size() == 0 || op1.currDimPosition >= op1.dims.size())
+         {
+            throw pegtl::parse_error("Expected array in length function", in);
+         }
+
+         int valueType = state.sc.getType("int");
+         int valueAddress = state.memory.allocMemory(memory::TEMP, valueType, state.sc.getTypeSize(valueType), false);
+         std::string valueAddress_str = "&" + std::to_string(valueAddress);
+         state.quadruples.push_back({"=", std::to_string(op1.dims[op1.currDimPosition].size), "", valueAddress_str});
+
+         state.operandStack.push({valueAddress_str, "int", valueAddress_str});
+
+         std::cout << "operand top out of length " << state.operandStack.top().address << std::endl;
       }
    };
 

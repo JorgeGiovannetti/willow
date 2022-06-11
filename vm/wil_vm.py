@@ -61,43 +61,33 @@ def ptr_displace(quad):
 
 def ptr_save(quad):
     address = utils.get_data(quad[3], memory)
-
     data = utils.get_data(quad[1], memory)
-
-    print('ptr_save', data)
-
     memory.assign_to_address(data, address)
 
     memory.instruction_pointer += 1
 
 def ptr_get(quad):
     address = utils.get_data(quad[1], memory)
-
     data = utils.get_data(address, memory)
-
     memory.assign_to_address(data, quad[3])
 
     memory.instruction_pointer += 1
 
 def writeln(quad):
     data = utils.get_data(quad[3], memory)
-
     print(data)
 
     memory.instruction_pointer += 1
 
 def write(quad):
     data = utils.get_data(quad[3], memory)
-
     print(data, end='')
 
     memory.instruction_pointer += 1
 
 def read(quad):
     data = input()
-
     casted_data = utils.cast_to_type(data, memory.typename_from_address(quad[3]))
-
     memory.assign_to_address(casted_data, quad[3])
 
     memory.instruction_pointer += 1
@@ -187,6 +177,8 @@ def leq(quad):
     op1 = utils.get_data(quad[1], memory)
     op2 = utils.get_data(quad[2], memory)
     
+    print('leq with', op1, 'and', op2)
+
     data = op1 <= op2
     
     memory.assign_to_address(data, quad[3])

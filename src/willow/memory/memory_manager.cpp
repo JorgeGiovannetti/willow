@@ -15,6 +15,7 @@ namespace willow::memory
 
     int MemoryManager::allocMemory(int memorySegment, int type_code, int size, bool isPointer)
     {
+        std::cout << "alloccing " << memorySegment << " " << type_code << " " << size << " " << isPointer << std::endl;
         int internal_address = memstate.segmentPointer[memorySegment][type_code - 1];
         memstate.segmentPointer[memorySegment][type_code - 1] += size;
 

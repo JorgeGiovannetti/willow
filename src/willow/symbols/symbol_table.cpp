@@ -123,4 +123,9 @@ namespace willow::symbols
             }
         }
     }
+
+    ScopeKind SymbolTable::getCurrentScopeKind()
+    {
+        return currentScope->kind;
+    }
 }

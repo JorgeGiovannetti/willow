@@ -55,7 +55,9 @@ namespace willow::parser
     struct read_func_call : if_must<t_read, t_paropen, t_parclose> {};
     struct write_func_call : if_must<t_write, t_paropen, expr, t_parclose> {};
     struct writeln_func_call : if_must<t_writeln, t_paropen, expr, t_parclose> {};
-    struct funcs : seq<sor<read_func_call, writeln_func_call, write_func_call, func_call>, t_semicolon> {};
+    struct length_func_call : if_must<t_length, t_paropen, expr, t_parclose> {};
+    struct builtin_func_call : sor<read_func_call, length_func_call> {};
+    struct funcs : seq<sor<writeln_func_call, write_func_call, builtin_func_call, func_call>, t_semicolon> {};
 
     // Classes
 
@@ -81,8 +83,9 @@ namespace willow::parser
     struct a3_while_loop : seps {};
     struct while_loop : if_must<t_while, seps, t_paropen, a1_while_loop, expr, seps, t_parclose, a2_while_loop, block, a3_while_loop> {};
     
-    struct a1_for_range : seps {};
-    struct for_range : seq<expr, t_rangedot, expr, a1_for_range> {};
+    struct a1_for_range : t_rangedot {};
+    struct a2_for_range : seps {};
+    struct for_range : seq<expr, a1_for_range, expr, a2_for_range> {};
     
     struct a1_for_loop : seps {};
     struct a2_for_loop : seps {};
@@ -107,7 +110,7 @@ namespace willow::parser
     struct expr_parclose : t_parclose {};
 
     struct a1_expr_L1 : seps{};
-    struct expr_L1 : seq<sor<seq<expr_paropen, seps, expr, seps, expr_parclose>, seq<at<func_call>, func_call>, var, literal, read_func_call>, seps> {};
+    struct expr_L1 : seq<sor<builtin_func_call, seq<at<func_call>, func_call>, var, literal, seq<expr_paropen, seps, expr, seps, expr_parclose>>, seps> {};
 
     struct a1_expr_L2 : seps{};
     struct expr_L2 : seq<opt<t_not>, expr_L1, a1_expr_L2> {};
