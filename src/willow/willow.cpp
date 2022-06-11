@@ -15,8 +15,10 @@ int main(int argc, char *argv[])
       return 1;
    }
 
-   Parser parser = Parser();
+   Parser parser;
    parser.parse(argv[1]);
+
+   // Add Python VM
 
    return 0;
 }

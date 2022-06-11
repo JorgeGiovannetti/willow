@@ -12,20 +12,26 @@ namespace willow::symbols
     {
         GLOBAL,
         LOCAL,
-        CLASS,
-        FUNCTION,
         TEMP,
-        CONSTANT
+        CONSTANT,
+        FUNCTION,
+        CLASS
     };
 
     static const std::string NONE_TYPE = "none";
+
+   struct Dim {
+      int size;
+      int displacement_size;
+   };
 
     struct Symbol
     {
         std::string id;
         std::string type;
         std::string address;
-        std::vector<int> dims;
+        std::vector<Dim> dims;
+        int currDimPosition = 0;
     };
 
     struct Scope
@@ -48,14 +54,14 @@ namespace willow::symbols
         static std::shared_ptr<SymbolTable> instance();
 
         Symbol lookup(std::string id);
-        void insert(std::string id, std::string type, std::string address);
+        void insert(std::string id, std::string type, std::string address, std::vector<Dim> dims);
         std::shared_ptr<Scope> createScope(ScopeKind);
         void setScope(std::shared_ptr<Scope>);
         void exitScope();
         void deleteScope(std::shared_ptr<Scope>);
 
     private:
-        uint16_t scopeCounter;
+        size_t scopeCounter;
         std::shared_ptr<Scope> currentScope;
         const std::shared_ptr<Scope> globalScope;
 

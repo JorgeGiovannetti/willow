@@ -78,6 +78,7 @@ namespace willow::parser
     struct t_this : TAO_PEGTL_STRING("this") {};
     struct t_true : TAO_PEGTL_STRING("true") {};
     struct t_while : TAO_PEGTL_STRING("while") {};
+    struct t_writeln : TAO_PEGTL_STRING("writeln") {};
     struct t_write : TAO_PEGTL_STRING("write") {};
 
     struct reserved : sor<
@@ -102,6 +103,7 @@ namespace willow::parser
               t_true,
               t_while,
               t_write,
+              t_writeln,
               t_and,
               t_or>
     {

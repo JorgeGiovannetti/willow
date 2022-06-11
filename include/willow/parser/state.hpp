@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <stack>
 
@@ -26,8 +28,11 @@ namespace willow::parser
         willow::symbols::FunctionDirectory funcdir;
         willow::symbols::ClassDirectory classdir;
         willow::memory::MemoryManager memory;
+        std::vector<willow::symbols::Dim> currDims;
+        std::string currType;
 
-        bool isInFunction = false;
+        bool isInFunction;
+        bool isInClass;
 
         void displayQuadruples();
     };

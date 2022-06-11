@@ -25,7 +25,9 @@ namespace willow::parser
     // Type
 
     struct basic_type : sor<t_int, t_float, t_bool, t_char, t_string> {};
-    struct type : seq<sor<basic_type, t_id>, star<t_bracketopen, seps, t_lit_int, seps, t_bracketclose>> {};
+    struct a_type_closearr : seps {};
+    struct type : seq<sor<basic_type, t_id>> {};
+    struct structured_type : seq<type, star<t_bracketopen, seps, t_lit_int, a_type_closearr, t_bracketclose>> {};
 
     // Literals
 
@@ -33,10 +35,12 @@ namespace willow::parser
 
     // Vars
 
-    struct var : seq<sor<identifier, t_this>, star<sor<seq<t_bracketopen, expr, t_bracketclose>, seq<t_dot, identifier>>>> {};
-    struct s_var_type : type {};
+    struct a_var_bracketopen : t_bracketopen {};
+    struct a_var_bracketclose : t_bracketclose {};
+    struct a_var_dot : t_dot {};
+    struct var : seq<sor<identifier, t_this>, star<sor<seq<a_var_bracketopen, expr, a_var_bracketclose>, seq<t_dot, identifier>>>> {};
     struct s_var_basic_type : basic_type {};
-    struct s_var : seq<identifier, seps, t_colon, seps, s_var_type> {};
+    struct s_var : seq<identifier, seps, t_colon, seps, structured_type> {};
     struct s_var_basic : seq<identifier, seps, t_colon, seps, s_var_basic_type> {};
     struct var_def : seq<s_var, opt<seps, t_assign, seps, expr>> {};
     struct var_def_stmt : seq<var_def, seps, t_semicolon> {};
@@ -44,13 +48,14 @@ namespace willow::parser
     // Functions
 
     struct params_def : if_must<t_paropen, seps, opt<s_var_basic, seps, star<t_comma, seps, s_var_basic, seps>>, t_parclose> {};
-    struct funcdef : if_must<t_fn, sepp, identifier, a_open_scope, params_def, seps, opt<t_colon, seps, type>, seps, block_noscopeopen> {};
-    struct params : if_must<t_paropen, seps, opt<expr, star<seps, t_comma, seps, expr>, seps>, t_parclose> {};
+    struct funcdef : if_must<t_fn, sepp, identifier, a_open_scope, params_def, seps, opt<t_colon, seps, basic_type>, seps, block_noscopeopen> {};
+    struct params : if_must<t_paropen, seps, opt<expr, seps, star<t_comma, seps, expr, seps>>, t_parclose> {};
     struct main_func : seq<t_fn, sepp, if_must<t_main, seps, t_paropen, seps, t_parclose, seps, block>> {};
     struct func_call : seq<var, params> {};
     struct read_func_call : if_must<t_read, t_paropen, t_parclose> {};
-    struct write_func_call : if_must<t_write, params> {};
-    struct funcs : seq<sor<read_func_call, write_func_call, func_call>, t_semicolon> {};
+    struct write_func_call : if_must<t_write, t_paropen, expr, t_parclose> {};
+    struct writeln_func_call : if_must<t_writeln, t_paropen, expr, t_parclose> {};
+    struct funcs : seq<sor<read_func_call, writeln_func_call, write_func_call, func_call>, t_semicolon> {};
 
     // Classes
 
@@ -105,7 +110,7 @@ namespace willow::parser
     struct expr_L1 : seq<sor<seq<expr_paropen, seps, expr, seps, expr_parclose>, seq<at<func_call>, func_call>, var, literal, read_func_call>, seps> {};
 
     struct a1_expr_L2 : seps{};
-    struct expr_L2 : seq<opt<sor<t_minus, t_not>>, expr_L1, a1_expr_L2> {};
+    struct expr_L2 : seq<opt<t_not>, expr_L1, a1_expr_L2> {};
 
     struct a1_expr_L3 : seps{};
     struct expr_L3 : seq<expr_L2, a1_expr_L3, star<sor<t_mult, t_div, t_mod>, seps, expr_L2, a1_expr_L3>> {};

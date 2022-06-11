@@ -1,22 +1,33 @@
 #include <iostream>
 #include <filesystem>
+#include <fstream>
+
 #include <tao/pegtl.hpp>
-#include "actions.cpp"
 #include <willow/willow.hpp>
+#include "actions.cpp"
 
 namespace pegtl = tao::pegtl;
-using willow::symbols::SymbolTable;
 
 namespace willow::parser
 {
-    Parser::Parser()
+    void Parser::generateObjectFile(const std::string &filepath)
     {
+
+        std::string outFilepath = std::filesystem::path(filepath).filename().replace_extension("wol").string();
+
+        std::ofstream file;
+        
+        file.open(outFilepath);
+        for (Quadruple quad : st.quadruples)
+        {
+            file << quad.to_string() << std::endl;
+        }
+        file.close();
     }
 
     void Parser::parse(const std::string &filepath)
     {
 
-        State st = State();
         std::string currDirectory = std::filesystem::path(filepath).parent_path().string();
         st.filepathStack.push(currDirectory);
 
@@ -27,6 +38,8 @@ namespace willow::parser
             {
                 pegtl::parse<main_grammar, action>(in, st);
                 st.displayQuadruples();
+
+                generateObjectFile(filepath);
             }
             catch (const pegtl::parse_error &e)
             {
