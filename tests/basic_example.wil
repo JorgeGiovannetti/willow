@@ -1,9 +1,9 @@
 fn main() {
     myName: string = read(); 
-    write("Hello, " + myName + "!");
+    writeln("Hello, " + myName + "!");
     
     x: int = 3;
     y: int = 5;
     
-    write(x + y);
+    writeln(x + y);
 }

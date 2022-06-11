@@ -79,10 +79,17 @@ def ptr_get(quad):
 
     memory.instruction_pointer += 1
 
-def write(quad):
+def writeln(quad):
     data = utils.get_data(quad[3], memory)
 
     print(data)
+
+    memory.instruction_pointer += 1
+
+def write(quad):
+    data = utils.get_data(quad[3], memory)
+
+    print(data, end='')
 
     memory.instruction_pointer += 1
 
@@ -237,6 +244,7 @@ operations = {
     '&disp': ptr_displace,
     '&save': ptr_save,
     '&get': ptr_get,
+    'writeln': writeln,
     'write': write,
     'read': read,
     '=': assign,
