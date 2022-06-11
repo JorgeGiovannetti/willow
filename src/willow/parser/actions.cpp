@@ -32,9 +32,20 @@ namespace willow::parser
       Symbol op1 = state.operandStack.top();
       state.operandStack.pop();
 
+      if (state.memory.isPointer(op1.address))
+      {
+         // Get value from pointer address and store in temp
+         int valueType = state.sc.getType(op1.type);
+         int valueAddress = state.memory.allocMemory(memory::TEMP, valueType, state.sc.getTypeSize(valueType), false);
+         std::string valueAddress_str = "&" + std::to_string(valueAddress);
+         state.quadruples.push_back({"&get", op1.address, "", valueAddress_str});
+
+         op1 = {valueAddress_str, op1.type, valueAddress_str};
+      }
+
       std::string result_type = state.sc.query(op1.type, "none", operation);
 
-      int allocatedAddress = state.memory.allocMemory(memory::TEMP, state.sc.getType(result_type), state.sc.getTypeSize(result_type));
+      int allocatedAddress = state.memory.allocMemory(memory::TEMP, state.sc.getType(result_type), state.sc.getTypeSize(result_type), false);
       std::string address_str = '&' + std::to_string(allocatedAddress);
       Quadruple quad = {operation, op1.address, "", address_str};
       state.quadruples.push_back(quad);
@@ -50,15 +61,37 @@ namespace willow::parser
       Symbol op2 = state.operandStack.top();
       state.operandStack.pop();
 
+      if (state.memory.isPointer(op2.address))
+      {
+         // Get value from pointer address and store in temp
+         int valueType = state.sc.getType(op2.type);
+         int valueAddress = state.memory.allocMemory(memory::TEMP, valueType, state.sc.getTypeSize(valueType), false);
+         std::string valueAddress_str = "&" + std::to_string(valueAddress);
+         state.quadruples.push_back({"&get", op2.address, "", valueAddress_str});
+
+         op2 = {valueAddress_str, op2.type, valueAddress_str};
+      }
+
       Symbol op1 = state.operandStack.top();
       state.operandStack.pop();
+
+      if (state.memory.isPointer(op1.address))
+      {
+         // Get value from pointer address and store in temp
+         int valueType = state.sc.getType(op1.type);
+         int valueAddress = state.memory.allocMemory(memory::TEMP, valueType, state.sc.getTypeSize(valueType), false);
+         std::string valueAddress_str = "&" + std::to_string(valueAddress);
+         state.quadruples.push_back({"&get", op1.address, "", valueAddress_str});
+
+         op1 = {valueAddress_str, op1.type, valueAddress_str};
+      }
 
       std::string op1_type_with_dims = addDimsToType(op1.type, op1.dims, op1.currDimPosition);
       std::string op2_type_with_dims = addDimsToType(op2.type, op2.dims, op2.currDimPosition);
 
       std::string result_type = state.sc.query(op1_type_with_dims, op2_type_with_dims, operation);
 
-      int allocatedAddress = state.memory.allocMemory(memory::TEMP, state.sc.getType(result_type), state.sc.getTypeSize(result_type));
+      int allocatedAddress = state.memory.allocMemory(memory::TEMP, state.sc.getType(result_type), state.sc.getTypeSize(result_type), false);
       std::string address_str = '&' + std::to_string(allocatedAddress);
       Quadruple quad = {operation, op1.address, op2.address, address_str};
       state.quadruples.push_back(quad);
@@ -123,7 +156,7 @@ namespace willow::parser
          try
          {
             state.st->createScope(state.currScopeKind);
-            state.memory.cacheCurrentMemstate();
+            state.memory.cacheCurrentMemstate(false);
          }
          catch (std::string msg)
          {
@@ -200,7 +233,7 @@ namespace willow::parser
             dims_size *= dim.size;
          }
 
-         int allocatedAddress = state.memory.allocMemory(memSegment, type_code, type_size * dims_size);
+         int allocatedAddress = state.memory.allocMemory(memSegment, type_code, type_size * dims_size, false);
          std::string address_str = '&' + std::to_string(allocatedAddress);
 
          state.operandStack.top().address = address_str;
@@ -668,17 +701,38 @@ namespace willow::parser
             return;
          }
 
-         Symbol op2 = state.operandStack.top();
-         state.operandStack.pop();
-         Symbol op1 = state.operandStack.top();
-         state.operandStack.pop();
          std::string operation = state.operatorStack.top();
          state.operatorStack.pop();
+
+         Symbol op2 = state.operandStack.top();
+         state.operandStack.pop();
+
+         if (state.memory.isPointer(op2.address))
+         {
+            // Get value from pointer address and store in temp
+            int valueType = state.sc.getType(op2.type);
+            int valueAddress = state.memory.allocMemory(memory::TEMP, valueType, state.sc.getTypeSize(valueType), false);
+            std::string valueAddress_str = "&" + std::to_string(valueAddress);
+            state.quadruples.push_back({"&get", op2.address, "", valueAddress_str});
+
+            op2 = {valueAddress_str, op2.type, valueAddress_str};
+         }
+
+         Symbol op1 = state.operandStack.top();
+         state.operandStack.pop();
 
          try
          {
             state.sc.query(op1.type, op2.type, "=");
-            state.quadruples.push_back({"=", op2.address, "", op1.address});
+
+            if (state.memory.isPointer(op1.address))
+            {
+               state.quadruples.push_back({"&save", op2.address, "", op1.address});
+            }
+            else
+            {
+               state.quadruples.push_back({"=", op2.address, "", op1.address});
+            }
          }
          catch (std::string msg)
          {
@@ -714,7 +768,7 @@ namespace willow::parser
 
                std::string temp_type = state.sc.query(op1_type_with_dims, op2_type_with_dims, operation);
 
-               int allocatedAddress = state.memory.allocMemory(memory::TEMP, state.sc.getType(temp_type), state.sc.getTypeSize(temp_type));
+               int allocatedAddress = state.memory.allocMemory(memory::TEMP, state.sc.getType(temp_type), state.sc.getTypeSize(temp_type), false);
                std::string address_str = '&' + std::to_string(allocatedAddress);
                Quadruple quad = {operation, op1.address, op2.address, address_str};
                state.quadruples.push_back(quad);
@@ -726,8 +780,14 @@ namespace willow::parser
 
             state.sc.query(op1_type_with_dims, op2_type_with_dims, "=");
 
-            Quadruple quad = {"=", op2.address, "", op1.address};
-            state.quadruples.push_back(quad);
+            if (state.memory.isPointer(op1.address))
+            {
+               state.quadruples.push_back({"&save", op2.address, "", op1.address});
+            }
+            else
+            {
+               state.quadruples.push_back({"=", op2.address, "", op1.address});
+            }
          }
          catch (std::string msg)
          {
@@ -886,7 +946,7 @@ namespace willow::parser
          std::string temp_type = "int";
          int type_code = state.sc.getType(temp_type);
 
-         int allocatedAddress = state.memory.allocMemory(memory::TEMP, type_code, state.sc.getTypeSize(type_code));
+         int allocatedAddress = state.memory.allocMemory(memory::TEMP, type_code, state.sc.getTypeSize(type_code), false);
 
          std::string address_str = '&' + std::to_string(allocatedAddress);
          state.quadruples.push_back({"<=", loop_iterator.address, range_to.address, address_str});
@@ -909,7 +969,7 @@ namespace willow::parser
          std::string temp_type = "int";
          int type_code = state.sc.getType(temp_type);
 
-         int allocatedAddress = state.memory.allocMemory(memory::TEMP, type_code, state.sc.getTypeSize(type_code));
+         int allocatedAddress = state.memory.allocMemory(memory::TEMP, type_code, state.sc.getTypeSize(type_code), false);
          std::string address_str = '&' + std::to_string(allocatedAddress);
 
          state.quadruples.push_back({"+", loop_iterator.address, "1", address_str});
@@ -977,7 +1037,7 @@ namespace willow::parser
          // Calculate pointer displacement for array indexing
 
          int type_code = state.sc.getType("int");
-         int allocatedAddress = state.memory.allocMemory(memory::TEMP, type_code, state.sc.getTypeSize(type_code));
+         int allocatedAddress = state.memory.allocMemory(memory::TEMP, type_code, state.sc.getTypeSize(type_code), false);
          std::string address_str = '&' + std::to_string(allocatedAddress);
          state.quadruples.push_back({"*", indexed_value.id, std::to_string(currDim.displacement_size), address_str});
 
@@ -987,7 +1047,7 @@ namespace willow::parser
             state.operandStack.pop();
 
             std::string address_tmp = address_str;
-            allocatedAddress = state.memory.allocMemory(memory::TEMP, type_code, state.sc.getTypeSize(type_code));
+            allocatedAddress = state.memory.allocMemory(memory::TEMP, type_code, state.sc.getTypeSize(type_code), false);
             address_str = '&' + std::to_string(allocatedAddress);
             state.quadruples.push_back({"+", runningIndexing.address, address_tmp, address_str});
          }
@@ -997,30 +1057,25 @@ namespace willow::parser
          // Increase currDimPosition
          operand.currDimPosition++;
 
-         if(operand.currDimPosition >= operand.dims.size())
+         if (operand.currDimPosition >= operand.dims.size())
          {
 
             // Alloc memory of type & (pointer)
-            int pointerAddress = state.memory.allocMemory(memory::TEMP, state.sc.getType("&"), state.sc.getTypeSize(type_code));
-            std::string pointerAddress_str = "&" + std::to_string(pointerAddress);
-            state.quadruples.push_back({ "&save", address_str, operand.address, pointerAddress_str });
-
-            // Get value from displaced address and store in temp
             int valueType = state.sc.getType(operand.type);
-            int valueAddress = state.memory.allocMemory(memory::TEMP, valueType, state.sc.getTypeSize(valueType));
-            std::string valueAddress_str = "&" + std::to_string(valueAddress);
-            state.quadruples.push_back({"&get", pointerAddress_str, "", valueAddress_str});
+            int pointerAddress = state.memory.allocMemory(memory::TEMP, state.sc.getTypeSize(valueType), state.sc.getTypeSize(type_code), true);
+            std::string pointerAddress_str = "&" + std::to_string(pointerAddress);
+            state.quadruples.push_back({"&disp", address_str, operand.address, pointerAddress_str});
 
             // Remove running indexing sum from operand stack
             state.operandStack.pop();
 
             // Push indexed-value address
-            state.operandStack.push({valueAddress_str, operand.type, valueAddress_str});
+            state.operandStack.push({pointerAddress_str, operand.type, pointerAddress_str});
          }
          else
          {
-         // Push back in operand if more dims remain
-         state.operandStack.push(operand);
+            // Push back in operand if more dims remain
+            state.operandStack.push(operand);
          }
       }
    };

@@ -36,6 +36,12 @@ namespace willow::semantics
 
     void TypeManager::newType(const std::string &type_name, const int &size)
     {
+
+        if(typeIntToString.size() == 255)
+        {
+            throw std::string("Type limit reached");
+        }
+
         typeIntToString.push_back(type_name);
         typeStringToInt[type_name] = typeIntToString.size();
         typeSize.push_back(size);

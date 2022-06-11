@@ -46,27 +46,56 @@ def ver(quad):
     
     memory.instruction_pointer += 1
 
-def ptr_save(quad):
+def ptr_displace(quad):
     op1 = utils.get_data(quad[1], memory)
     op2 = memory.get_address(quad[2])
+
+    assert type(op1) == int
     
     data = op1 + op2
+    ptr_address = '&' + str(data)
     
-    memory.assign_to_address('&' + str(data), quad[3])
+    memory.assign_to_address(ptr_address, quad[3])
+
+    memory.instruction_pointer += 1
+
+def ptr_save(quad):
+    address = utils.get_data(quad[3], memory)
+
+    data = utils.get_data(quad[1], memory)
+
+    print('ptr_save', data)
+
+    memory.assign_to_address(data, address)
 
     memory.instruction_pointer += 1
 
 def ptr_get(quad):
     address = utils.get_data(quad[1], memory)
 
-    print('ptr_get got address', address)
-
     data = utils.get_data(address, memory)
-    print('ptr_get got data', data)
 
     memory.assign_to_address(data, quad[3])
 
     memory.instruction_pointer += 1
+
+def write(quad):
+    data = utils.get_data(quad[3], memory)
+
+    print(data)
+
+    memory.instruction_pointer += 1
+
+def read(quad):
+    data = utils.get_data(quad[1], memory)
+
+    casted_data = utils.cast_to_type(data, memory.typename_from_address(quad[3]))
+
+    memory.assign_to_address(data, quad[3])
+
+    memory.instruction_pointer += 1
+
+# Expressions Operations
 
 def assign(quad):
     data = utils.get_data(quad[1], memory)
@@ -205,8 +234,11 @@ operations = {
     'gotof': gotof,
     'end': end,
     'ver': ver,
+    '&disp': ptr_displace,
     '&save': ptr_save,
     '&get': ptr_get,
+    'write': write,
+    'read': read,
     '=': assign,
     '*': multiply,
     '/': divide,

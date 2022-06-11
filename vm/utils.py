@@ -20,9 +20,23 @@ def cast_literal(data: str):
     # int
     if float(data) == int(data):
         return int(data)
-    
+
     # float
     return float(data)
+
+def cast_to_type(data: str, type: str):
+    # int
+    if type == 'int':
+        return int(data)
+    # float
+    if type == 'float':
+        return float(data)
+    # bool
+    if data == "true" or data == "false":
+        return data == "true"
+    
+    # string / char
+    return data
 
 def get_data(data: str, memory: Memory):
     if is_address(data):
