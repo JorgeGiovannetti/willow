@@ -3,7 +3,7 @@
 #include <fstream>
 
 #include <tao/pegtl.hpp>
-#include <willow/willow.hpp>
+
 #include "actions.cpp"
 
 namespace pegtl = tao::pegtl;
@@ -12,11 +12,8 @@ namespace willow::parser
 {
     void Parser::generateObjectFile(const std::string &filepath)
     {
-
         std::string outFilepath = std::filesystem::path(filepath).filename().replace_extension("wol").string();
-
         std::ofstream file;
-
         file.open(outFilepath);
 
         // Output classes
@@ -47,7 +44,6 @@ namespace willow::parser
 
     void Parser::parse(const std::string &filepath)
     {
-
         std::string currDirectory = std::filesystem::path(filepath).parent_path().string();
         st.filepathStack.push(currDirectory);
 

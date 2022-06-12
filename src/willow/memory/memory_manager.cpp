@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <willow/memory/memory_manager.hpp>
+#include "willow/memory/memory_manager.hpp"
 
 namespace willow::memory
 {
@@ -16,13 +16,20 @@ namespace willow::memory
     int MemoryManager::allocMemory(int memorySegment, int type_code, int size, bool isPointer)
     {
         int internal_address = memstate.segmentPointer[memorySegment][type_code];
-        
-        std::cout << "alloccing with internal_address " << internal_address << std::endl;
         memstate.segmentPointer[memorySegment][type_code] += size;
 
         return maskAddress(internal_address, memorySegment, type_code, isPointer);
     }
-
+    
+    std::string MemoryManager::allocMemory(willow::semantics::SemanticCube &sc, int memorySegment, std::string type_str, int dims_size, bool isPointer)
+    {
+        int type_code = sc.getType(type_str);
+        int type_size =  sc.getTypeSize(type_code);
+        int address = allocMemory(memory::TEMP, type_code, type_size * dims_size, isPointer);
+        
+        return "&" + std::to_string(address);
+    }
+    
     void MemoryManager::deallocMemory()
     {
         if (memstateCache.empty())

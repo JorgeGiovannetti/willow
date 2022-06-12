@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PARSER_HPP
+#define PARSER_HPP
 
 #include <string>
 
@@ -15,3 +16,5 @@ namespace willow::parser
         State st;
     };
 }
+
+#endif

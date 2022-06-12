@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SEMANTIC_CUBE_HPP
+#define SEMANTIC_CUBE_HPP
 
 #include <string>
 #include <vector>
@@ -25,3 +26,5 @@ namespace willow::semantics
         std::unordered_map<std::string, int> operatorMap;
     };
 }
+
+#endif

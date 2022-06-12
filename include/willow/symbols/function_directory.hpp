@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FUNCTION_DIRECTORY_HPP
+#define FUNCTION_DIRECTORY_HPP
 
 #include <memory>
 #include <unordered_map>
@@ -30,3 +31,5 @@ namespace willow::symbols
         std::unordered_map<std::string, FunctionSignature> functions;
     };
 }
+
+#endif

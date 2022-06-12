@@ -1,7 +1,7 @@
-#include <willow/symbols/symbol_table.hpp>
-
 #include <memory>
 #include <algorithm>
+
+#include "willow/symbols/symbol_table.hpp"
 
 namespace willow::symbols
 {

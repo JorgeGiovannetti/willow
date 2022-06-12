@@ -1,4 +1,5 @@
-#pragma once
+#ifndef STATE_HPP
+#define STATE_HPP
 
 #include <iostream>
 #include <stack>
@@ -38,3 +39,5 @@ namespace willow::parser
         void displayQuadruples();
     };
 }
+
+#endif

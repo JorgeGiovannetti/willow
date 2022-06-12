@@ -1,15 +1,17 @@
-#pragma once
+#ifndef MEMORY_MANAGER_HPP
+#define MEMORY_MANAGER_HPP
 
 #include <string>
 #include <stack>
 #include <unordered_map>
 
-#include "willow/symbols/symbol_table.hpp"
+#include "willow/semantics/semantic_cube.hpp"
 
 namespace willow::memory
 {
 
-    enum MemorySegment {
+    enum MemorySegment
+    {
         GLOBAL,
         LOCAL,
         TEMP
@@ -25,6 +27,8 @@ namespace willow::memory
     {
     public:
         int allocMemory(int memorySegment, int type_code, int size, bool isPointer);
+        std::string allocMemory(willow::semantics::SemanticCube &sc, int memorySegment, std::string type_str, int dims_size, bool isPointer);
+
         void deallocMemory();
         void cacheCurrentMemstate(bool shouldClearMemory);
 
@@ -37,7 +41,6 @@ namespace willow::memory
         bool isPointer(std::string address);
 
     private:
-
         int segmentMask(int memorySegment);
         int typeMask(int type_code);
         int pointerMask(bool isPointer);
@@ -46,3 +49,5 @@ namespace willow::memory
         MemoryState memstate;
     };
 }
+
+#endif

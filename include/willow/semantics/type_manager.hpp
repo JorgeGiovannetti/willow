@@ -1,10 +1,9 @@
-#pragma once
+#ifndef TYPE_MANAGER_HPP
+#define TYPE_MANAGER_HPP
 
 #include <string>
 #include <vector>
 #include <unordered_map>
-
-#include "willow/symbols/symbol_table.hpp"
 
 namespace willow::semantics
 {
@@ -25,3 +24,5 @@ namespace willow::semantics
         std::vector<int> typeSize;
     };
 }
+
+#endif

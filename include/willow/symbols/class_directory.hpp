@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CLASS_DIRECTORY_HPP
+#define CLASS_DIRECTORY_HPP
 
 #include <memory>
 #include <unordered_map>
@@ -12,7 +13,8 @@
 namespace willow::symbols
 {
 
-    struct Attribute : Symbol {
+    struct Attribute : Symbol
+    {
         std::string access;
         int position = 0;
     };
@@ -21,7 +23,7 @@ namespace willow::symbols
     {
         std::string id;
         std::unordered_map<std::string, Attribute> attributes;
-        std::unordered_map<std::string,FunctionDirectory> methods;
+        std::unordered_map<std::string, FunctionDirectory> methods;
         int size = 0;
     };
 
@@ -38,3 +40,5 @@ namespace willow::symbols
         std::unordered_map<std::string, ClassSignature> classes;
     };
 }
+
+#endif

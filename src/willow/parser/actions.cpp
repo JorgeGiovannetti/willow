@@ -1,9 +1,11 @@
 #include <iostream>
 #include <filesystem>
-
 #include <stack>
+
 #include <tao/pegtl.hpp>
+
 #include <willow/willow.hpp>
+
 #include "grammar_errors.cpp"
 
 namespace pegtl = tao::pegtl;
@@ -29,77 +31,91 @@ namespace willow::parser
 
    void addUnaryOperation(State &state)
    {
+      // Get operator
       std::string operation = state.operatorStack.top();
       state.operatorStack.pop();
 
+      // Get operand
       Symbol op1 = state.operandStack.top();
       state.operandStack.pop();
 
+      std::cout << "Popping operand of unary operation " << operation << ": " << op1.address << std::endl;
+
+      // If operand is pointer, get its value
       if (state.memory.isPointer(op1.address))
       {
-         // Get value from pointer address and store in temp
-         int valueType = state.sc.getType(op1.type);
-         int valueAddress = state.memory.allocMemory(memory::TEMP, valueType, state.sc.getTypeSize(valueType), false);
-         std::string valueAddress_str = "&" + std::to_string(valueAddress);
+         // Alloc temp to store pointed value
+         std::string valueAddress_str = state.memory.allocMemory(state.sc, memory::TEMP, op1.type, 1, false);
          state.quadruples.push_back({"&get", op1.address, "", valueAddress_str});
 
-         op1 = {valueAddress_str, op1.type, valueAddress_str};
+         // Replace operand with pointed value
+         op1.id = valueAddress_str;
+         op1.address = valueAddress_str;
       }
 
+      // Get operation result type
       std::string result_type = state.sc.query(op1.type, "none", operation);
 
-      int allocatedAddress = state.memory.allocMemory(memory::TEMP, state.sc.getType(result_type), state.sc.getTypeSize(result_type), false);
-      std::string address_str = '&' + std::to_string(allocatedAddress);
-      Quadruple quad = {operation, op1.address, "", address_str};
-      state.quadruples.push_back(quad);
+      // Store operation result in temp address
+      std::string address_str = state.memory.allocMemory(state.sc, memory::TEMP, result_type, 1, false);
+      state.quadruples.push_back({operation, op1.address, "", address_str});
 
+      // Push result operand
+      std::cout << "Pushing operand result of unary operation " << operation << ": " << address_str << std::endl;
       state.operandStack.push({address_str, result_type, address_str});
    }
 
    void addBinaryOperation(State &state)
    {
+      // Get operator
       std::string operation = state.operatorStack.top();
       state.operatorStack.pop();
 
+      // Get right operand
       Symbol op2 = state.operandStack.top();
       state.operandStack.pop();
 
       if (state.memory.isPointer(op2.address))
       {
-         // Get value from pointer address and store in temp
-         int valueType = state.sc.getType(op2.type);
-         int valueAddress = state.memory.allocMemory(memory::TEMP, valueType, state.sc.getTypeSize(valueType), false);
-         std::string valueAddress_str = "&" + std::to_string(valueAddress);
-         state.quadruples.push_back({"&get", op2.address, "", valueAddress_str});
+         // Alloc temp to store pointed value
+         std::string valueAddress = state.memory.allocMemory(state.sc, memory::TEMP, op2.type, 1, false);
+         state.quadruples.push_back({"&get", op2.address, "", valueAddress});
 
-         op2 = {valueAddress_str, op2.type, valueAddress_str};
+         // Replace operand with pointed value
+         op2.id = valueAddress;
+         op2.address = valueAddress;
       }
 
+      // Get left operand
       Symbol op1 = state.operandStack.top();
       state.operandStack.pop();
 
+      // If operand is pointer, get its value
       if (state.memory.isPointer(op1.address))
       {
-         // Get value from pointer address and store in temp
-         int valueType = state.sc.getType(op1.type);
-         int valueAddress = state.memory.allocMemory(memory::TEMP, valueType, state.sc.getTypeSize(valueType), false);
-         std::string valueAddress_str = "&" + std::to_string(valueAddress);
-         state.quadruples.push_back({"&get", op1.address, "", valueAddress_str});
+         // Alloc temp to store pointed value
+         std::string valueAddress = state.memory.allocMemory(state.sc, memory::TEMP, op1.type, 1, false);
+         state.quadruples.push_back({"&get", op1.address, "", valueAddress});
 
-         op1 = {valueAddress_str, op1.type, valueAddress_str};
+         // Replace operand with pointed value
+         op1.id = valueAddress;
+         op1.address = valueAddress;
       }
 
+      // Add dims to type string for error messages
       std::string op1_type_with_dims = addDimsToType(op1.type, op1.dims, op1.currDimPosition);
       std::string op2_type_with_dims = addDimsToType(op2.type, op2.dims, op2.currDimPosition);
 
+      // Get operation result type
       std::string result_type = state.sc.query(op1_type_with_dims, op2_type_with_dims, operation);
 
-      int allocatedAddress = state.memory.allocMemory(memory::TEMP, state.sc.getType(result_type), state.sc.getTypeSize(result_type), false);
-      std::string address_str = '&' + std::to_string(allocatedAddress);
-      Quadruple quad = {operation, op1.address, op2.address, address_str};
-      state.quadruples.push_back(quad);
+      // Store operation result in temp address
+      std::string resultAddress = state.memory.allocMemory(state.sc, memory::TEMP, result_type, 1, false);
+      state.quadruples.push_back({operation, op1.address, op2.address, resultAddress});
 
-      state.operandStack.push({address_str, result_type, address_str});
+      // Push result operand
+      std::cout << "Pushing operand result of binary operation " << operation << ": " << resultAddress << std::endl;
+      state.operandStack.push({resultAddress, result_type, resultAddress});
    }
 
    template <typename Rule>
@@ -114,7 +130,7 @@ namespace willow::parser
    {
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
-      {         
+      {
          std::string filepath = state.operandStack.top().id.substr(1, state.operandStack.top().id.length() - 2);
          state.operandStack.pop();
 
@@ -175,9 +191,16 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         state.st->exitScope();
-         state.currScopeKind = state.st->getCurrentScopeKind();
-         state.memory.deallocMemory();
+         try
+         {
+            state.st->exitScope();
+            state.currScopeKind = state.st->getCurrentScopeKind();
+            state.memory.deallocMemory();
+         }
+         catch (std::string msg)
+         {
+            throw pegtl::parse_error(msg, in);
+         }
       }
    };
 
@@ -1150,10 +1173,6 @@ namespace willow::parser
 
          std::cout << "accessing attribute " << in.string() << " from variable " << operand.id << std::endl;
          std::cout << "address of variable is " << operand.address << std::endl;
-         int v_addrs = std::stoi(operand.address.substr(1));
-         std::cout << "int address of variable is " << v_addrs << std::endl;
-         std::cout << "type of variable from address is " << state.memory.typeFromAddress(v_addrs) << std::endl;
-
 
          ClassSignature var_class = state.classdir.lookup(operand.type);
 
@@ -1404,6 +1423,8 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         // TODO: Add goto -> main before ending run
+         // state.quadruples.push_back({"goto", "", "", "main"});
          state.quadruples.push_back({"end", "", "", ""});
       }
    };

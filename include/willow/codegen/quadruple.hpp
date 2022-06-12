@@ -1,4 +1,5 @@
-#pragma once
+#ifndef QUADRUPLE_HPP
+#define QUADRUPLE_HPP
 
 #include <string>
 #include <vector>
@@ -17,3 +18,5 @@ namespace willow::codegen
         }
     };
 }
+
+#endif

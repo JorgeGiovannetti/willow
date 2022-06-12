@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SYMBOL_TABLE_HPP
+#define SYMBOL_TABLE_HPP
 
 #include <memory>
 #include <unordered_map>
@@ -20,10 +21,11 @@ namespace willow::symbols
 
     static const std::string NONE_TYPE = "none";
 
-   struct Dim {
-      int size;
-      int displacement_size;
-   };
+    struct Dim
+    {
+        int size;
+        int displacement_size;
+    };
 
     struct Symbol
     {
@@ -69,3 +71,5 @@ namespace willow::symbols
         SymbolTable();
     };
 }
+
+#endif

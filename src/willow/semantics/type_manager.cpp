@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-#include <willow/semantics/semantic_cube.hpp>
+#include "willow/semantics/semantic_cube.hpp"
 
 namespace willow::semantics
 {
@@ -47,13 +47,9 @@ namespace willow::semantics
             throw std::string("Tried to create type " + type_name + ", which already exists");
         }
 
-        std::cout << "new type in type manager: " << type_name << " with size " << size << std::endl;
-
         typeIntToString.push_back(type_name);
         typeStringToInt[type_name] = typeIntToString.size() - 1;
         typeSize.push_back(size);
-
-        std::cout << "new type was assigned code " << typeStringToInt[type_name] << std::endl;
     }
 
     int TypeManager::increaseSize(const std::string &type_name, const int &size)

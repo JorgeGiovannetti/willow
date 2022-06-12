@@ -1,6 +1,6 @@
 #include <string>
 
-#include <willow/symbols/class_directory.hpp>
+#include "willow/symbols/class_directory.hpp"
 
 namespace willow::symbols
 {
