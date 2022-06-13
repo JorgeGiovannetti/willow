@@ -858,7 +858,7 @@ namespace willow::parser
             if (operation == "*=" || operation == "/=" || operation == "+=" || operation == "-=" || operation == "%=")
             {
                // Get operation to be executed before assignment (*, /, +, -, %)
-               operation = std::string(operation[0]);
+               operation = {operation[0]};
 
                std::string temp_type = state.sc.query(op1_type_with_dims, op2_type_with_dims, operation);
                std::string address = state.memory.allocMemory(state.sc, memory::TEMP, temp_type, 1, false);
