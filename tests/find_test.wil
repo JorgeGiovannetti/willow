@@ -1,0 +1,30 @@
+fn find(n: int) {
+    found: bool = false;
+
+    arr: int[8];
+
+    arr[0] = 5;
+    arr[1] = 1;
+    arr[2] = 9;
+    arr[3] = 2;
+    arr[4] = 22;
+    arr[5] = 12;
+    arr[6] = 13;
+    arr[7] = 26;
+
+    for(i: int -> 0..length(arr)) {
+        if(n == arr[i]){
+            found = true;
+        }
+    }
+
+    if(found == true){
+        write(n + " is inside the array");
+    } else{
+        write(n + " is not inside the array");
+    } 
+}
+
+fn main() {
+    find(246);
+}
