@@ -1,0 +1,36 @@
+fn bubbleSort() {
+    arr: int[10];
+    
+    arr[0] = 5;
+    arr[1] = 1;
+    arr[2] = 4;
+    arr[3] = 2;
+    arr[4] = 8;
+    arr[5] = 12;
+    arr[6] = 13;
+    arr[7] = 26;
+    arr[8] = 15;
+    arr[9] = 30;
+
+    N: int = length(arr);
+    
+    for(i: int -> 0..(N-1)){
+        for(j: int -> 0..(N-i-1)){
+            if(arr[j] > arr[j+1]){
+                aux: int = 0;
+                aux = arr[j];
+                arr[j] = arr[j+1];
+                arr[j+1] = aux;
+            }
+        }
+    }
+
+    # print array
+    for (i: int -> 0..N){
+        write(arr[i] + " ");
+    }
+}
+
+fn main() {
+    bubbleSort();
+}
