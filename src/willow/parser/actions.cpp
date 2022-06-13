@@ -1718,6 +1718,9 @@ namespace willow::parser
             // Create function scope
             state.st->createScope(willow::symbols::FUNCTION);
 
+            // Cache memory and clear new state
+            state.memory.cacheCurrentMemstate(true);
+
             // Set current function to its identifier
             state.isInFunction = state.currId;
 
@@ -1759,7 +1762,7 @@ namespace willow::parser
 
             if (state.isInClass == "")
             {
-               state.funcdir.addParam(state.sc.typeManager, param.id, param.type);
+               state.funcdir.addParam(state.sc.typeManager, state.isInFunction, param);
             }
             else
             {
@@ -1824,13 +1827,44 @@ namespace willow::parser
    };
 
    template <>
+   struct action<a_params>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         try
+         {
+            Symbol param = state.operandStack.top();
+            state.operandStack.pop();
+
+            // Get current func call stack tops
+            const FunctionSignature &currFunc = state.currFuncCall.top();
+            int &currParam = state.currParam.top();
+            
+            // Check current param matches function signature
+            if (currFunc.params.size() <= currParam || currFunc.params[currParam].type != param.type)
+            {
+               throw pegtl::parse_error("Provided parameters do not match function signature", in);
+            }
+
+            // Increase currParam for next param
+            currParam++;
+         }
+         catch (std::string msg)
+         {
+            throw pegtl::parse_error(msg, in);
+         }
+      }
+   };
+
+   template <>
    struct action<func_call>
    {
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
          // Check all params were covered
-         if (state.currParam.top() < state.currFuncCall.top().params.size())
+         if (state.currParam.top() != state.currFuncCall.top().params.size())
          {
             throw pegtl::parse_error("Provided parameters do not match function signature", in);
          }

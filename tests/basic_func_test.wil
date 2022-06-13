@@ -10,10 +10,17 @@ fn myFunc() {
     writeln("myFact result: " + result);
 }
 
+fn paramTest(a: int, b: int) {
+    writeln("Param a = " + a);
+    writeln("Param b = " + b);
+}
+
 fn main() {
     writeln("I'm in main right now!");
 
     myFunc();
+    
+    paramTest(5, 3);
 
     writeln("I'm out of the function right now!");
 }

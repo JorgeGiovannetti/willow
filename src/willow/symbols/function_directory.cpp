@@ -24,14 +24,14 @@ namespace willow::symbols
         return functions[id];
     }
 
-    void FunctionDirectory::addParam(willow::semantics::TypeManager tm, std::string id, std::string param_type)
+    void FunctionDirectory::addParam(willow::semantics::TypeManager tm, std::string id, Symbol param)
     {
         if (!functions.count(id))
         {
             throw std::string("Function with identifier " + id + " does not exist");
         }
         
-        functions[id].params.push_back(param_type);
+        functions[id].params.push_back(param);
     }
     void FunctionDirectory::addReturnType(willow::semantics::TypeManager tm, std::string id, std::string return_type)
     {
