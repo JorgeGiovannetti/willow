@@ -131,18 +131,23 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         // Get value from string literal, removing quotations (")
          std::string filepath = state.operandStack.top().id.substr(1, state.operandStack.top().id.length() - 2);
          state.operandStack.pop();
 
          assert(!state.filepathStack.empty());
 
+         // Current folder/path
          std::string currDirectory = state.filepathStack.top();
+
+         // Get folder/parent path of imported file
          std::string importedDirectory = std::filesystem::path(filepath).parent_path().string();
 
          state.filepathStack.push(currDirectory + "/" + importedDirectory);
 
          try
          {
+            // Nested parsing of imported file
             pegtl::file_input importedIn(currDirectory + "/" + filepath);
             pegtl::parse_nested<grammar, action>(in, importedIn, state);
          }
@@ -159,6 +164,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         // Pop filepath on end of file
          assert(!state.filepathStack.empty());
          state.filepathStack.pop();
       }
@@ -174,8 +180,11 @@ namespace willow::parser
       {
          try
          {
+            // Create local scope
             state.currScopeKind = symbols::LOCAL;
             state.st->createScope(state.currScopeKind);
+
+            // Cache current memory state
             state.memory.cacheCurrentMemstate(false);
          }
          catch (std::string msg)
@@ -193,8 +202,11 @@ namespace willow::parser
       {
          try
          {
+            // Exit scope
             state.st->exitScope();
             state.currScopeKind = state.st->getCurrentScopeKind();
+
+            // Return to cached memory state from outer scope
             state.memory.deallocMemory();
          }
          catch (std::string msg)
@@ -212,12 +224,15 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         // TODO: THIS IS VERY SUS, CHECK OUT LATER
          try
          {
+            // Pushes operand if the identifier exists in symbol table
             state.operandStack.push(state.st->lookup(in.string()));
          }
          catch (std::string msg)
          {
+            // If it doesn't exist in symbol table yet, it pushes an operand without type or address
             state.operandStack.push({in.string(), willow::symbols::NONE_TYPE});
          }
       }
@@ -250,35 +265,32 @@ namespace willow::parser
       static void apply(const ActionInput &in, State &state)
       {
 
+         // Calculate how much to displace per dimension
          for (int i = state.currDims.size() - 2; i >= 0; i--)
          {
             state.currDims[i].displacement_size = state.currDims[i + 1].size * state.currDims[i + 1].displacement_size;
          }
 
-         std::cout << "state currtype " << state.currType << std::endl;
-
-         int type_code = state.sc.getType(state.currType);
-         int type_size = state.sc.getTypeSize(type_code);
-
-         int memSegment = state.currScopeKind == symbols::GLOBAL ? memory::GLOBAL : memory::LOCAL;
-
-         state.operandStack.top().type = state.currType;
-         state.operandStack.top().dims = state.currDims;
-
-         state.currDims.clear();
-
+         // Calculate total amount of entries in structure (array / matrix / etc.)
          int dims_size = 1;
          for (Dim dim : state.operandStack.top().dims)
          {
             dims_size *= dim.size;
          }
 
-         std::cout << "alloccing memory in segment " << memSegment << " with type " << type_code << " and dims_size " << dims_size << std::endl;
-         int allocatedAddress = state.memory.allocMemory(memSegment, type_code, type_size * dims_size, false);
-         std::string address_str = '&' + std::to_string(allocatedAddress);
-         std::cout << "allocced " << address_str << std::endl;
+         // Store variable at global memory segment, otherwise as local
+         int memSegment = state.currScopeKind == symbols::GLOBAL ? memory::GLOBAL : memory::LOCAL;
 
-         state.operandStack.top().address = address_str;
+         // Allocate memory for variable
+         std::string address = state.memory.allocMemory(state.sc, memSegment, state.currType, dims_size, false);
+
+         // Assign type, dimensions, and address to variable
+         state.operandStack.top().type = state.currType;
+         state.operandStack.top().dims = state.currDims;
+         state.operandStack.top().address = address;
+
+         // Clear currDims in state for next structured variable
+         state.currDims.clear();
       }
    };
 
@@ -290,6 +302,7 @@ namespace willow::parser
       {
          try
          {
+            // Inserts current operand to symbol table
             const Symbol &operand = state.operandStack.top();
             state.st->insert(operand.id, operand.type, operand.address, operand.dims);
          }
@@ -308,6 +321,7 @@ namespace willow::parser
       {
          try
          {
+            // Inserts current operand to symbol table
             Symbol &operand = state.operandStack.top();
             operand.type = state.currType;
             state.st->insert(operand.id, operand.type, operand.address, operand.dims);
@@ -591,6 +605,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         // TODO: CHECK THIS OUT, KINDA SUS
          while (state.operatorStack.top() != "(")
          {
             try
@@ -763,39 +778,44 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-
+         // If we don't assign a value, we pop operand and exit action
          if (state.operatorStack.empty() || state.operatorStack.top() != "=")
          {
             state.operandStack.pop();
             return;
          }
 
+         // Get operator
          std::string operation = state.operatorStack.top();
          state.operatorStack.pop();
 
+         // Get right operand
          Symbol op2 = state.operandStack.top();
+         state.operandStack.pop();
+
+         // Get left operand (variable we are assigning to)
+         Symbol op1 = state.operandStack.top();
          state.operandStack.pop();
 
          if (state.memory.isPointer(op2.address))
          {
             // Get value from pointer address and store in temp
-            int valueType = state.sc.getType(op2.type);
-            int valueAddress = state.memory.allocMemory(memory::TEMP, valueType, state.sc.getTypeSize(valueType), false);
-            std::string valueAddress_str = "&" + std::to_string(valueAddress);
-            state.quadruples.push_back({"&get", op2.address, "", valueAddress_str});
+            std::string valueAddress = state.memory.allocMemory(state.sc, memory::TEMP, op2.type, 1, false);
+            state.quadruples.push_back({"&get", op2.address, "", valueAddress});
 
-            op2 = {valueAddress_str, op2.type, valueAddress_str};
+            // Replace operand with pointed value
+            op2.id = valueAddress;
+            op2.address = valueAddress;
          }
-
-         Symbol op1 = state.operandStack.top();
-         state.operandStack.pop();
 
          try
          {
+            // Validate types match
             state.sc.query(op1.type, op2.type, "=");
 
             if (state.memory.isPointer(op1.address))
             {
+               // If address is a pointer, we use &save to assign to pointed value
                state.quadruples.push_back({"&save", op2.address, "", op1.address});
             }
             else
@@ -817,15 +837,19 @@ namespace willow::parser
       static void apply(const ActionInput &in, State &state)
       {
 
+         // Get operator
          std::string operation = state.operatorStack.top();
          state.operatorStack.pop();
 
+         // Get right operand
          Symbol op2 = state.operandStack.top();
          state.operandStack.pop();
 
+         // Get left operand
          Symbol op1 = state.operandStack.top();
          state.operandStack.pop();
 
+         // Add dims to type string for error messages
          std::string op1_type_with_dims = addDimsToType(op1.type, op1.dims, op1.currDimPosition);
          std::string op2_type_with_dims = addDimsToType(op2.type, op2.dims, op2.currDimPosition);
 
@@ -833,24 +857,27 @@ namespace willow::parser
          {
             if (operation == "*=" || operation == "/=" || operation == "+=" || operation == "-=" || operation == "%=")
             {
-               operation = operation.substr(0, 1);
+               // Get operation to be executed before assignment (*, /, +, -, %)
+               operation = std::string(operation[0]);
 
                std::string temp_type = state.sc.query(op1_type_with_dims, op2_type_with_dims, operation);
+               std::string address = state.memory.allocMemory(state.sc, memory::TEMP, temp_type, 1, false);
 
-               int allocatedAddress = state.memory.allocMemory(memory::TEMP, state.sc.getType(temp_type), state.sc.getTypeSize(temp_type), false);
-               std::string address_str = '&' + std::to_string(allocatedAddress);
-               Quadruple quad = {operation, op1.address, op2.address, address_str};
-               state.quadruples.push_back(quad);
+               state.quadruples.push_back({operation, op1.address, op2.address, address});
 
-               op2 = {address_str, temp_type, address_str};
+               op2.id = address;
+               op2.address = address;
 
+               // Add dims to type string for error messages
                op2_type_with_dims = addDimsToType(op2.type, op2.dims, op2.currDimPosition);
             }
 
+            // Verify types match
             state.sc.query(op1_type_with_dims, op2_type_with_dims, "=");
 
             if (state.memory.isPointer(op1.address))
             {
+               // If address is a pointer, we use &save to assign to pointed value
                state.quadruples.push_back({"&save", op2.address, "", op1.address});
             }
             else
@@ -873,15 +900,20 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         // Get resulting operand from expression
          Symbol expr_result = state.operandStack.top();
          state.operandStack.pop();
 
+         // If expression result is not boolean, throw error
          if (expr_result.type != "bool")
          {
             throw pegtl::parse_error("Error: Expected boolean inside \"if-statement\"", in);
          }
 
+         // Prepare gotof to fill in target address on conditional exit
          state.quadruples.push_back({"gotof", expr_result.address, "", ""});
+
+         // Insert jump point to return to fill in gotof later
          state.jumpStack.push(state.quadruples.size() - 1);
       }
    };
@@ -895,6 +927,7 @@ namespace willow::parser
          size_t conditional_end = state.jumpStack.top();
          state.jumpStack.pop();
 
+         // Assign jump point on condition end goto/gotof
          state.quadruples[conditional_end].targetAddress = std::to_string(state.quadruples.size());
       }
    };
@@ -905,11 +938,18 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         // Prepare goto on else statement
          state.quadruples.push_back({"goto", "", "", ""});
+
+         // Get jump point on false
          size_t false_jump = state.jumpStack.top();
          state.jumpStack.pop();
-         state.jumpStack.push(state.quadruples.size() - 1);
+
+         // Add false jump to previously created gotof
          state.quadruples[false_jump].targetAddress = std::to_string(state.quadruples.size());
+
+         // Push current jump point for end
+         state.jumpStack.push(state.quadruples.size() - 1);
       }
    };
 
@@ -921,6 +961,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         // Push jump point before loop condition
          state.jumpStack.push(state.quadruples.size());
       }
    };
@@ -931,15 +972,20 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         // Get resulting operand from expression
          Symbol expr_result = state.operandStack.top();
          state.operandStack.pop();
 
+         // If expression result is not boolean, throw error
          if (expr_result.type != "bool")
          {
             throw pegtl::parse_error("Error: Expected boolean inside \"while-loop\" condition", in);
          }
 
+         // Prepare gotof to fill in target address on loop exit
          state.quadruples.push_back({"gotof", expr_result.address, "", ""});
+
+         // Insert jump point to return to fill in gotof later
          state.jumpStack.push(state.quadruples.size() - 1);
       }
    };
@@ -950,12 +996,18 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         // Get loop jump point
          size_t loop_jump_point = state.jumpStack.top();
          state.jumpStack.pop();
+
+         // Get jump point before condition
          size_t loop_start = state.jumpStack.top();
          state.jumpStack.pop();
 
+         // Add goto at end of loop that sends to before the condition
          state.quadruples.push_back({"goto", "", "", std::to_string(loop_start)});
+
+         // Set current position (after loop) as destination for the loop jump point gotof
          state.quadruples[loop_jump_point].targetAddress = std::to_string(state.quadruples.size());
       }
    };
@@ -968,6 +1020,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         // Push jump point before range target, after initializing iterator
          state.jumpStack.push(state.quadruples.size());
       }
    };
@@ -978,23 +1031,29 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         // Get right operand
          Symbol op2 = state.operandStack.top();
          state.operandStack.pop();
 
+         // Get left operand
          Symbol op1 = state.operandStack.top();
          state.operandStack.pop();
 
+         // TODO: CHECK THIS OUT, KINDA SUS
+         // If the right operand didn't generate any quadruples, move jump point to right after
          if (state.jumpStack.top() == state.quadruples.size())
          {
             state.jumpStack.pop();
             state.jumpStack.push(state.quadruples.size() + 1);
          }
 
+         // Check both range sides are integers
          if (op1.type != "int" || op2.type != "int")
          {
             throw pegtl::parse_error("Error: Expected int in for-loop range", in);
          }
 
+         // Push operands back in their place
          state.operandStack.push(op1);
          state.operandStack.push(op2);
       }
@@ -1008,6 +1067,7 @@ namespace willow::parser
       {
          Symbol loop_iterator = state.operandStack.top();
 
+         // Check loop iterator is int
          if (loop_iterator.type != "int")
          {
             throw pegtl::parse_error("Error: Non-int iterators are not (yet) supported", in);
@@ -1021,21 +1081,25 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         // Range right side
          Symbol range_to = state.operandStack.top();
          state.operandStack.pop();
+
+         // Range left side
          Symbol range_from = state.operandStack.top();
          state.operandStack.pop();
+
          Symbol loop_iterator = state.operandStack.top(); // Doesn't need pop, we need it on a3
 
+         // Assign range left side to loop iterator
          state.quadruples.push_back({"=", range_from.address, "", loop_iterator.address});
 
-         int type_code = state.sc.getType("bool");
-         int allocatedAddress = state.memory.allocMemory(memory::TEMP, type_code, state.sc.getTypeSize(type_code), false);
-         std::string address_str = '&' + std::to_string(allocatedAddress);
+         // Allocate boolean temp and check if our iterator <= range_to
+         std::string address = state.memory.allocMemory(state.sc, memory::TEMP, "bool", 1, false);
+         state.quadruples.push_back({"<=", loop_iterator.address, range_to.address, address});
 
-         state.quadruples.push_back({"<=", loop_iterator.address, range_to.address, address_str});
-
-         state.quadruples.push_back({"gotof", address_str, "", ""});
+         // Prepare gotof for end of loop
+         state.quadruples.push_back({"gotof", address, "", ""});
          state.jumpStack.push(state.quadruples.size() - 1);
       }
    };
@@ -1046,23 +1110,25 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         Symbol loop_iterator = state.operandStack.top();
+         // Pop loop_iterator
+         const Symbol &loop_iterator = state.operandStack.top();
          state.operandStack.pop();
 
-         int type_code = state.sc.getType("int");
+         // Increase loop iterator by 1
+         std::string address = state.memory.allocMemory(state.sc, memory::TEMP, "int", 1, false);
+         state.quadruples.push_back({"+", loop_iterator.address, "1", address});
+         state.quadruples.push_back({"=", address, "", loop_iterator.address});
 
-         int allocatedAddress = state.memory.allocMemory(memory::TEMP, type_code, state.sc.getTypeSize(type_code), false);
-         std::string address_str = '&' + std::to_string(allocatedAddress);
-
-         state.quadruples.push_back({"+", loop_iterator.address, "1", address_str});
-         state.quadruples.push_back({"=", address_str, "", loop_iterator.address});
-
+         // Get condition false jump
          size_t for_false_jump = state.jumpStack.top();
          state.jumpStack.pop();
 
+         // Get jump before condition
          size_t for_jump = state.jumpStack.top();
          state.jumpStack.pop();
          state.quadruples.push_back({"goto", "", "", std::to_string(for_jump)});
+
+         // Fill in gotof to current position
          state.quadruples[for_false_jump].targetAddress = std::to_string(state.quadruples.size());
       }
    };
@@ -1076,12 +1142,14 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         // Check if array dimension is valid
          int dimSize = std::stoi(state.operandStack.top().id);
          if (dimSize <= 0)
          {
             throw pegtl::parse_error("Declared array dimension with a non-positive size", in);
          }
 
+         // Add dim to currDims
          state.currDims.push_back({dimSize, 1});
          state.operandStack.pop();
       }
@@ -1093,66 +1161,65 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-
-         const Symbol &indexed_value = state.operandStack.top();
+         // Get value at index
+         const Symbol &index_value = state.operandStack.top();
          state.operandStack.pop();
 
-         if (indexed_value.type != "int")
+         // Check index is integer
+         if (index_value.type != "int")
          {
-            throw std::string("Array index is not an integer, got " + indexed_value.type);
+            throw std::string("Array index is not an integer, got " + index_value.type);
          }
 
+         // Get variable we're indexing
          Symbol operand = state.operandStack.top();
-
-         // Pop operand
          state.operandStack.pop();
 
+         // Check if the variable we're indexing is an array / current dimension is valid
          if (operand.dims.empty() || operand.currDimPosition >= operand.dims.size())
          {
             throw std::string("Subscripted value is not an array");
          }
 
-         Dim currDim = operand.dims[operand.currDimPosition];
-
-         state.quadruples.push_back({"ver", indexed_value.address, std::to_string(currDim.size), operand.address});
+         // Get current dimension and verify if the index value is valid
+         const Dim &currDim = operand.dims[operand.currDimPosition];
+         state.quadruples.push_back({"ver", index_value.address, std::to_string(currDim.size), operand.address});
 
          // Calculate pointer displacement for array indexing
+         std::string address = state.memory.allocMemory(state.sc, memory::TEMP, "int", 1, false);
+         state.quadruples.push_back({"*", index_value.address, std::to_string(currDim.displacement_size), address});
 
-         int type_code = state.sc.getType("int");
-         int allocatedAddress = state.memory.allocMemory(memory::TEMP, type_code, state.sc.getTypeSize(type_code), false);
-         std::string address_str = '&' + std::to_string(allocatedAddress);
-         state.quadruples.push_back({"*", indexed_value.id, std::to_string(currDim.displacement_size), address_str});
-
+         // Add running displacement for dimensions > 0
          if (operand.currDimPosition > 0)
          {
+            // Get running indexing
             Symbol runningIndexing = state.operandStack.top();
             state.operandStack.pop();
 
-            std::string address_tmp = address_str;
-            allocatedAddress = state.memory.allocMemory(memory::TEMP, type_code, state.sc.getTypeSize(type_code), false);
-            address_str = '&' + std::to_string(allocatedAddress);
-            state.quadruples.push_back({"+", runningIndexing.address, address_tmp, address_str});
+            // Add displacement to running indexing
+            std::string address_tmp = address;
+            address = state.memory.allocMemory(state.sc, memory::TEMP, "int", 1, false);
+            state.quadruples.push_back({"+", runningIndexing.address, address_tmp, address});
          }
 
-         state.operandStack.push({address_str, "int", address_str});
+         // Push current displacement
+         state.operandStack.push({address, "int", address});
 
          // Increase currDimPosition
          operand.currDimPosition++;
 
+         // If this was the last dimension,
          if (operand.currDimPosition >= operand.dims.size())
          {
-
-            // Alloc memory of type & (pointer)
-            int valueType = state.sc.getType(operand.type);
-            int pointerAddress = state.memory.allocMemory(memory::TEMP, state.sc.getTypeSize(valueType), state.sc.getTypeSize(type_code), true);
-            std::string pointerAddress_str = "&" + std::to_string(pointerAddress);
-            state.quadruples.push_back({"&disp", address_str, operand.address, pointerAddress_str});
+            // Alloc pointer to variable at index
+            std::string pointerAddress = state.memory.allocMemory(state.sc, memory::TEMP, operand.type, 1, true);
+            state.quadruples.push_back({"&disp", address, operand.address, pointerAddress});
 
             // Remove running indexing sum from operand stack
             state.operandStack.pop();
 
             // Push indexed-value address
-            state.operandStack.push({pointerAddress_str, operand.type, pointerAddress_str});
+            state.operandStack.push({pointerAddress, operand.type, pointerAddress});
          }
          else
          {
@@ -1168,37 +1235,42 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         Symbol operand = state.operandStack.top();
-         state.operandStack.pop();
-
-         std::cout << "accessing attribute " << in.string() << " from variable " << operand.id << std::endl;
-         std::cout << "address of variable is " << operand.address << std::endl;
-
-         ClassSignature var_class = state.classdir.lookup(operand.type);
-
-         if (!var_class.attributes.count(in.string()))
+         // TODO: CHECK LATER HOW TO HANDLE METHODS
+         try
          {
-            throw pegtl::parse_error("Attribute " + in.string() + " is not a part of type " + operand.type, in);
+            // Get operand
+            Symbol operand = state.operandStack.top();
+            state.operandStack.pop();
+
+            // Get class signature of operand
+            ClassSignature var_class = state.classdir.lookup(operand.type);
+
+            // Check that the attribute exists
+            if (!var_class.attributes.count(in.string()))
+            {
+               throw pegtl::parse_error("Attribute " + in.string() + " is not a part of type " + operand.type, in);
+            }
+
+            // Get attribute
+            Attribute attr = var_class.attributes[in.string()];
+
+            // Check that the attribute is public
+            if (attr.access == "-")
+            {
+               throw pegtl::parse_error("Cannot access private attribute " + in.string() + " outside of its class " + operand.type, in);
+            }
+
+            // Alloc memory of type & (pointer)
+            std::string pointerAddress = state.memory.allocMemory(state.sc, memory::TEMP, attr.type, 1, true);
+            state.quadruples.push_back({"&disp", std::to_string(attr.position), operand.address, pointerAddress});
+
+            // Push indexed-value address
+            state.operandStack.push({pointerAddress, attr.type, pointerAddress});
          }
-
-         Attribute attr = var_class.attributes[in.string()];
-
-         if (attr.access == "-")
+         catch (std::string msg)
          {
-            throw pegtl::parse_error("Cannot access private attribute " + in.string() + " outside of its class " + operand.type, in);
+            throw pegtl::parse_error(msg, in);
          }
-
-         // Alloc memory of type & (pointer)
-         int valueType = state.sc.getType(attr.type);
-
-         int pointerAddress = state.memory.allocMemory(memory::TEMP, state.sc.getTypeSize(valueType), state.sc.getTypeSize(valueType), true);
-         std::string pointerAddress_str = "&" + std::to_string(pointerAddress);
-         state.quadruples.push_back({"&disp", std::to_string(attr.position), operand.address, pointerAddress_str});
-
-         std::cout << "alloccing pointer of type " << attr.type << " from variable address " << operand.address << std::endl;
-
-         // Push indexed-value address
-         state.operandStack.push({pointerAddress_str, attr.type, pointerAddress_str});
       }
    };
 
@@ -1220,10 +1292,9 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         // Get attribute
          Symbol attrop = state.operandStack.top();
          state.operandStack.pop();
-
-         std::cout << "adding attribute " << attrop.id << " of type " << attrop.type << std::endl;
 
          Attribute attr;
 
@@ -1234,6 +1305,7 @@ namespace willow::parser
          attr.id = attrop.id;
          attr.type = attrop.type;
 
+         // Add attribute to class directory
          state.classdir.addAttribute(state.sc.typeManager, state.isInClass, attr);
       }
    };
@@ -1244,6 +1316,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         // Add class to semantic cube and memory manager
          state.sc.newType(state.isInClass, state.classdir.lookup(state.isInClass).size);
          state.memory.addType();
          state.isInClass = "";
@@ -1256,6 +1329,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         // Create empty class and set scope to class
          state.isInClass = in.string();
          state.classdir.insert({in.string()});
          state.st->createScope(symbols::CLASS);
@@ -1269,11 +1343,26 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         ClassSignature parentClass = state.classdir.lookup(in.string());
-
-         for (const auto &[key, attr] : parentClass.attributes)
+         try
          {
-            state.classdir.addAttribute(state.sc.typeManager, state.isInClass, attr);
+            // Get parent class
+            ClassSignature parentClass = state.classdir.lookup(in.string());
+
+            // Add every attribute to child
+            for (const auto &[key, attr] : parentClass.attributes)
+            {
+               state.classdir.addAttribute(state.sc.typeManager, state.isInClass, attr);
+            }
+
+            // Add every method to child
+            for (const auto &[key, method] : parentClass.methods)
+            {
+               state.classdir.addMethod(key, method);
+            }
+         }
+         catch (std::string msg)
+         {
+            throw pegtl::parse_error(msg, in);
          }
       }
    };
@@ -1301,12 +1390,13 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         int allocatedAddress = state.memory.allocMemory(memory::TEMP, state.sc.getType("string"), state.sc.getTypeSize("string"), false);
-         std::string address_str = '&' + std::to_string(allocatedAddress);
-         Quadruple quad = {"read", "", "", address_str};
+         // Alloc temp to store return of read
+         std::string address = state.memory.allocMemory(state.sc, memory::TEMP, "string", 1, false);
+         Quadruple quad = {"read", "", "", address};
          state.quadruples.push_back(quad);
 
-         state.operandStack.push({address_str, "string", address_str});
+         // Push result to operand stack
+         state.operandStack.push({address, "string", address});
       }
    };
 
@@ -1316,21 +1406,21 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         Symbol op1 = state.operandStack.top();
+         // Get operand
+         Symbol operand = state.operandStack.top();
          state.operandStack.pop();
 
-         if (state.memory.isPointer(op1.address))
+         if (state.memory.isPointer(operand.address))
          {
             // Get value from pointer address and store in temp
-            int valueType = state.sc.getType(op1.type);
-            int valueAddress = state.memory.allocMemory(memory::TEMP, valueType, state.sc.getTypeSize(valueType), false);
-            std::string valueAddress_str = "&" + std::to_string(valueAddress);
-            state.quadruples.push_back({"&get", op1.address, "", valueAddress_str});
+            std::string valueAddress = state.memory.allocMemory(state.sc, memory::TEMP, operand.type, 1, false);
+            state.quadruples.push_back({"&get", operand.address, "", valueAddress});
 
-            op1 = {valueAddress_str, op1.type, valueAddress_str};
+            operand.id = valueAddress;
+            operand.address = valueAddress;
          }
 
-         state.quadruples.push_back({"writeln", "", "", op1.address});
+         state.quadruples.push_back({"writeln", "", "", operand.address});
       }
    };
 
@@ -1340,20 +1430,21 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         Symbol op1 = state.operandStack.top();
+         // Get operand
+         Symbol operand = state.operandStack.top();
          state.operandStack.pop();
 
-         if (op1.dims.size() == 0 || op1.currDimPosition >= op1.dims.size())
+         // Check if operand has dims and the current dimension is valid
+         if (operand.dims.size() == 0 || operand.currDimPosition >= operand.dims.size())
          {
             throw pegtl::parse_error("Expected array in length function", in);
          }
 
-         int valueType = state.sc.getType("int");
-         int valueAddress = state.memory.allocMemory(memory::TEMP, valueType, state.sc.getTypeSize(valueType), false);
-         std::string valueAddress_str = "&" + std::to_string(valueAddress);
-         state.quadruples.push_back({"=", std::to_string(op1.dims[op1.currDimPosition].size), "", valueAddress_str});
+         // Store current dimension size in temp address
+         std::string valueAddress = state.memory.allocMemory(state.sc, memory::TEMP, "int", 1, false);
+         state.quadruples.push_back({"=", std::to_string(operand.dims[operand.currDimPosition].size), "", valueAddress});
 
-         state.operandStack.push({valueAddress_str, "int", valueAddress_str});
+         state.operandStack.push({valueAddress, "int", valueAddress});
       }
    };
 
@@ -1363,21 +1454,21 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         Symbol op1 = state.operandStack.top();
+         // Get operand
+         Symbol operand = state.operandStack.top();
          state.operandStack.pop();
 
-         if (state.memory.isPointer(op1.address))
+         if (state.memory.isPointer(operand.address))
          {
             // Get value from pointer address and store in temp
-            int valueType = state.sc.getType(op1.type);
-            int valueAddress = state.memory.allocMemory(memory::TEMP, valueType, state.sc.getTypeSize(valueType), false);
-            std::string valueAddress_str = "&" + std::to_string(valueAddress);
-            state.quadruples.push_back({"&get", op1.address, "", valueAddress_str});
+            std::string valueAddress = state.memory.allocMemory(state.sc, memory::TEMP, operand.type, 1, false);
+            state.quadruples.push_back({"&get", operand.address, "", valueAddress});
 
-            op1 = {valueAddress_str, op1.type, valueAddress_str};
+            operand.id = valueAddress;
+            operand.address = valueAddress;
          }
 
-         state.quadruples.push_back({"write", "", "", op1.address});
+         state.quadruples.push_back({"write", "", "", operand.address});
       }
    };
 

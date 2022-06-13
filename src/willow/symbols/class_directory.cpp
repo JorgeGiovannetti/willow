@@ -50,6 +50,7 @@ namespace willow::symbols
 
     void ClassDirectory::addMethod(std::string id, FunctionSignature func)
     {
+        // TODO
     }
 
     std::unordered_map<std::string, ClassSignature> ClassDirectory::getClasses()

@@ -18,18 +18,24 @@ namespace willow::memory
         int internal_address = memstate.segmentPointer[memorySegment][type_code];
         memstate.segmentPointer[memorySegment][type_code] += size;
 
+        // Throw error when internal address starts pointing outside of range
+        if (memstate.segmentPointer[memorySegment][type_code] & (1 << 21))
+        {
+            throw std::string("Out of memory");
+        }
+
         return maskAddress(internal_address, memorySegment, type_code, isPointer);
     }
-    
+
     std::string MemoryManager::allocMemory(willow::semantics::SemanticCube &sc, int memorySegment, std::string type_str, int dims_size, bool isPointer)
     {
         int type_code = sc.getType(type_str);
-        int type_size =  sc.getTypeSize(type_code);
+        int type_size = sc.getTypeSize(type_code);
         int address = allocMemory(memory::TEMP, type_code, type_size * dims_size, isPointer);
-        
+
         return "&" + std::to_string(address);
     }
-    
+
     void MemoryManager::deallocMemory()
     {
         if (memstateCache.empty())
@@ -50,7 +56,9 @@ namespace willow::memory
         // Clears all segment pointers except global (for use in function calls)
         if (shouldClearMemory)
         {
+            // Gets amount of types
             int segmentPointerSize = memstate.segmentPointer[GLOBAL].size();
+
             for (int i = GLOBAL + 1; i < memstate.segmentPointer.size(); i++)
             {
                 memstate.segmentPointer[i] = std::vector<int>(segmentPointerSize, 0);
@@ -65,7 +73,6 @@ namespace willow::memory
 
     int MemoryManager::typeFromAddress(int address)
     {
-        std::cout << "typefromaddress got address" << address << " so type is " << ((address & 0xff << 21) >> 21) << std::endl;
         return ((address & 0xff << 21) >> 21);
     }
 

@@ -23,7 +23,7 @@ namespace willow::symbols
     {
         std::string id;
         std::unordered_map<std::string, Attribute> attributes;
-        std::unordered_map<std::string, FunctionDirectory> methods;
+        std::unordered_map<std::string, FunctionSignature> methods;
         int size = 0;
     };
 

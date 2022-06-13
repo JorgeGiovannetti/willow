@@ -95,7 +95,7 @@ namespace willow::symbols
     {
         if (scope->kind == GLOBAL)
         {
-            throw std::string("INTERNAL ERROR: CANNOT DELETE GLOBAL SCOPE"); // TODO: Create willow errors
+            throw std::string("INTERNAL ERROR: CANNOT DELETE GLOBAL SCOPE");
         }
 
         // Delete children
