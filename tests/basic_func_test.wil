@@ -1,0 +1,19 @@
+fn myFunc() {
+    writeln("Hello myFact!");
+
+    n: int = 5;
+    result: int = 1;
+    for(i: int -> 2..(n+1)) {
+        result *= i;
+    }
+
+    writeln("myFact result: " + result);
+}
+
+fn main() {
+    writeln("I'm in main right now!");
+
+    myFunc();
+
+    writeln("I'm out of the function right now!");
+}

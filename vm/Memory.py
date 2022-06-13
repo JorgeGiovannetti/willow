@@ -7,7 +7,7 @@ class Memory:
         self.instruction_pointer = 0
         self.stack_pointer = 0
         self.call_stack = []
-        self.memory_stack = [[self.init_nonglobal_memory(), self.init_nonglobal_memory()]]
+        self.memory_stack = [self.init_nonglobal_memory()]
 
     def add_type(self, type_name: str):
         self.global_memory[type_name] = []
@@ -17,7 +17,7 @@ class Memory:
         self.type_names.append(type_name)
 
     def init_nonglobal_memory(self):
-        return {type_name : [] for type_name in self.type_names}
+        return [{type_name : [] for type_name in self.type_names} for i in range(2)]
 
     def type_default_value(self, type_name: str):
         if type_name == 'int':

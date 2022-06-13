@@ -23,7 +23,7 @@ classDir, funcDir, quadruples = parse_wol(filename)
 for key in classDir:
     memory.add_type(key)
 
-# Operations
+# General Operations
 
 def goto(quad):
     memory.instruction_pointer = int(quad[3])
@@ -48,6 +48,23 @@ def ver(quad):
         exit(1)
     
     memory.instruction_pointer += 1
+
+# Function Operations
+def gosub(quad):
+    target = int(funcDir[quad[3]])
+
+    memory.call_stack.append(memory.instruction_pointer)
+    memory.memory_stack.append(memory.init_nonglobal_memory())
+
+    memory.instruction_pointer = target
+
+def endfunc(quad):
+    memory.instruction_pointer = memory.call_stack.pop()
+    memory.memory_stack.pop()
+    
+    memory.instruction_pointer += 1
+
+# Pointer Operations
 
 def ptr_displace(quad):
     op1 = utils.get_data(quad[1], memory)
@@ -75,6 +92,8 @@ def ptr_get(quad):
     memory.assign_to_address(data, quad[3])
 
     memory.instruction_pointer += 1
+
+# I/O Operations
 
 def writeln(quad):
     data = utils.get_data(quad[3], memory)
@@ -238,6 +257,8 @@ operations = {
     'gotof': gotof,
     'end': end,
     'ver': ver,
+    'gosub': gosub,
+    'endfunc': endfunc,
     '&disp': ptr_displace,
     '&save': ptr_save,
     '&get': ptr_get,

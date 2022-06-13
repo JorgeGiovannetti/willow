@@ -231,7 +231,7 @@ namespace willow::parser
    // Variable declaration
 
    template <>
-   struct action<a_s_var_id>
+   struct action<identifier>
    {
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
@@ -314,6 +314,7 @@ namespace willow::parser
          {
             // Inserts current operand to symbol table
             const Symbol &operand = state.operandStack.top();
+            std::cout << "inserting to symbol table: " << operand.id << " " << operand.type << " " << operand.address << std::endl;
             state.st->insert(operand.id, operand.type, operand.address, operand.dims);
          }
          catch (std::string msg)
@@ -1533,7 +1534,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         if (state.isInClass != "" && state.isInFunction)
+         if (state.isInClass != "" && state.isInFunction != "")
          {
             throw std::string("Invalid use of 'this' outside of a member function");
          }
@@ -1637,17 +1638,51 @@ namespace willow::parser
       }
    };
 
-   // Functions
+   // Main function
 
    template <>
-   struct action<t_fn>
+   struct action<t_main>
    {
+
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         state.isInFunction = true;
+         if (state.mainStart != -1)
+         {
+            throw pegtl::parse_error("Main already defined", in);
+         }
+
+         // Prepare goto before main so it gets executed at end
+         state.quadruples.push_back({"goto", "", "", ""});
+         state.jumpStack.push(state.quadruples.size() - 1);
+
+         // Set main start point
+         state.mainStart = state.quadruples.size();
       }
    };
+
+   template <>
+   struct action<main_func>
+   {
+
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+
+         // Go to end operation
+         state.quadruples.push_back({"goto", "", "", ""});
+         state.mainEnd = state.quadruples.size() - 1;
+
+         // Get main start point
+         size_t jump_main_start = state.jumpStack.top();
+         state.jumpStack.pop();
+
+         // Fill in previously set goto
+         state.quadruples[jump_main_start].targetAddress = std::to_string(state.quadruples.size());
+      }
+   };
+
+   // Function definition
 
    template <>
    struct action<funcdef>
@@ -1656,18 +1691,161 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         state.isInFunction = false;
+         // Clear current function
+         state.isInFunction = "";
+
+         state.quadruples.push_back({"endfunc", "", "", ""});
+
+         // Get function start point
+         size_t jump_func_start = state.jumpStack.top();
+         state.jumpStack.pop();
+
+         // Fill in previously set goto
+         state.quadruples[jump_func_start].targetAddress = std::to_string(state.quadruples.size());
       }
    };
 
    template <>
-   struct action<params_def>
+   struct action<a1_funcdef>
    {
 
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         // TODO
+         try
+         {
+
+            // Create function scope
+            state.st->createScope(willow::symbols::FUNCTION);
+
+            // Set current function to its identifier
+            state.isInFunction = state.currId;
+
+            // Prepare goto before function to avoid calling it on runtime during declaration
+            state.quadruples.push_back({"goto", "", "", ""});
+            state.jumpStack.push(state.quadruples.size() - 1);
+
+            // Store function position to call later
+            std::string func_position = std::to_string(state.quadruples.size());
+            if (state.isInClass == "")
+            {
+               state.funcdir.insert({state.isInFunction, func_position});
+            }
+            else
+            {
+               // TODO: Handle class methods
+               // state.classdir.addMethod(state.isInClass, {in.string(), func_position});
+            }
+         }
+         catch (std::string msg)
+         {
+            throw pegtl::parse_error(msg, in);
+         }
+      }
+   };
+
+   template <>
+   struct action<a_params_def>
+   {
+
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         try
+         {
+            Symbol param = state.operandStack.top();
+            state.operandStack.pop();
+            std::cout << "Popping operand in parameter definition" << std::endl;
+
+            if (state.isInClass == "")
+            {
+               state.funcdir.addParam(state.sc.typeManager, param.id, param.type);
+            }
+            else
+            {
+               // TODO: Handle class methods
+            }
+         }
+         catch (std::string msg)
+         {
+            throw pegtl::parse_error(msg, in);
+         }
+      }
+   };
+
+   template <>
+   struct action<a2_funcdef>
+   {
+
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         try
+         {
+            if (state.isInClass == "")
+            {
+               state.funcdir.addReturnType(state.sc.typeManager, state.isInFunction, state.currType);
+            }
+            else
+            {
+               // TODO: Handle class methods
+            }
+         }
+         catch (std::string msg)
+         {
+            throw pegtl::parse_error(msg, in);
+         }
+      }
+   };
+
+   // Function calls
+
+   template <>
+   struct action<a1_func_call>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+
+         // Check that the function exists
+         try
+         {
+            // TODO: Handle methods
+
+            // Push into func call stacks to manage nested calls
+            state.currFuncCall.push(state.funcdir.lookup(state.currId));
+            state.currParam.push(0);
+         }
+         catch (std::string msg)
+         {
+            throw pegtl::parse_error(msg, in);
+         }
+      }
+   };
+
+   template <>
+   struct action<func_call>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         // Check all params were covered
+         if (state.currParam.top() < state.currFuncCall.top().params.size())
+         {
+            throw pegtl::parse_error("Provided parameters do not match function signature", in);
+         }
+
+         // Call gosub
+         state.quadruples.push_back({"gosub", "", "", state.currFuncCall.top().id});
+
+         if (state.currFuncCall.top().return_type != "none")
+         {
+            // TODO: Copy return value to temp and add to operand stack
+         }
+
+         // Pop func call stacks
+         state.currFuncCall.pop();
+         state.currParam.pop();
       }
    };
 
@@ -1680,7 +1858,18 @@ namespace willow::parser
       static void apply(const ActionInput &in, State &state)
       {
          // TODO: Add goto -> main before ending run
-         // state.quadruples.push_back({"goto", "", "", "main"});
+         if (state.mainStart == -1)
+         {
+            throw pegtl::parse_error("Finished parsing, but no main function was defined", in);
+         }
+
+         state.quadruples.push_back({"goto", "", "", std::to_string(state.mainStart)});
+
+         if (state.mainEnd >= 0 && state.mainEnd < state.quadruples.size())
+         {
+            state.quadruples[state.mainEnd].targetAddress = std::to_string(state.quadruples.size());
+         }
+
          state.quadruples.push_back({"end", "", "", ""});
       }
    };

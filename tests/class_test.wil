@@ -1,12 +1,14 @@
-
-class Vector {
+class Vector2 {
     + x: int;
     + y: int;
+}
+
+class Vector3 -> Vector2 {
     + z: int;
 }
 
 fn main() {
-    v: Vector;
+    v: Vector3;
 
     v.x = 5;
     v.y = 4;

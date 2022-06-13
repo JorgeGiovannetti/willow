@@ -34,7 +34,7 @@ def parse_wol(filename: str):
                 classDir[c[0]] = c[1]
             elif position == 1:
                 f = line.split(' ')
-                funcDir[c[0]] = c[1]
+                funcDir[f[0]] = f[1]
             else:        
                 parse_quadruples(quadruples, line)
 

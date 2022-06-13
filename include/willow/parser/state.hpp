@@ -33,9 +33,14 @@ namespace willow::parser
         std::string currId;
         std::string currType;
         std::string currMemberAccess;
-
-        bool isInFunction;
+        
+        std::stack<willow::symbols::FunctionSignature> currFuncCall;
+        std::stack<int> currParam;
+        
         std::string isInClass;
+        std::string isInFunction;
+        int mainStart = -1;
+        int mainEnd = -1;
 
         void displayQuadruples();
     };
