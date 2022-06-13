@@ -1,0 +1,48 @@
+
+fn main() {  
+    arr1: int[3][3];
+    m1: int = length(arr1);
+    n1: int = length(arr1[0]);
+
+    arr2: int[3][3];
+    m2: int = length(arr2);
+    n2: int = length(arr2[0]);
+
+    result: int[3][3];
+
+    arr1[0][0] = 1;
+    arr1[0][1] = 2;
+    arr1[0][2] = 3;
+    arr1[1][0] = 1;
+    arr1[1][1] = 2;
+    arr1[1][2] = 3;
+    arr1[2][0] = 1;
+    arr1[2][1] = 2;
+    arr1[2][2] = 3;
+    
+    arr2[0][0] = 1;
+    arr2[0][1] = 1;
+    arr2[0][2] = 1;
+    arr2[1][0] = 2;
+    arr2[1][1] = 1;
+    arr2[1][2] = 2;
+    arr2[2][0] = 3;
+    arr2[2][1] = 2;
+    arr2[2][2] = 1;
+    
+    for(i: int -> 0..m1){
+        for(j: int -> 0..n1){
+            result[i][j]=0;
+            for(k: int -> 0..n1){
+                result[i][j] += arr1[i][k] * arr2[k][j];
+            }
+        }
+    }
+
+    for(i: int -> 0..m1){
+        for(j: int -> 0..n1){
+            write(result[i][j] + " ");
+        }
+        writeln(" ");
+    }
+}    
