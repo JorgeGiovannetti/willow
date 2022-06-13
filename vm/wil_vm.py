@@ -135,6 +135,10 @@ def add(quad):
     op1 = utils.get_data(quad[1], memory)
     op2 = utils.get_data(quad[2], memory)
     
+    if type(op1) == int and type(op2) == str:
+        op1 = str(op1)
+    elif type(op1) == str and type(op2) == int:
+        op2 = str(op2)
     data = op1 + op2
     
     memory.assign_to_address(data, quad[3])

@@ -7,7 +7,7 @@ class Memory:
         self.instruction_pointer = 0
         self.stack_pointer = 0
         self.call_stack = []
-        self.memory_stack = [[self.init_nonglobal_memory(),self.init_nonglobal_memory(), self.init_nonglobal_memory()]]
+        self.memory_stack = [[self.init_nonglobal_memory(), self.init_nonglobal_memory()]]
 
     def add_type(self, type_name: str):
         self.global_memory[type_name] = []

@@ -30,6 +30,7 @@ namespace willow::parser
         willow::symbols::ClassDirectory classdir;
         willow::memory::MemoryManager memory;
         std::vector<willow::symbols::Dim> currDims;
+        std::string currId;
         std::string currType;
         std::string currMemberAccess;
 

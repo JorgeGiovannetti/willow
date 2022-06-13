@@ -20,6 +20,26 @@ using willow::symbols::Symbol;
 namespace willow::parser
 {
 
+   void enterScope(State &state)
+   {
+      // Create local scope
+      state.currScopeKind = symbols::LOCAL;
+      state.st->createScope(state.currScopeKind);
+
+      // Cache current memory state
+      state.memory.cacheCurrentMemstate(false);
+   }
+
+   void exitScope(State &state)
+   {
+      // Exit scope
+      state.st->exitScope();
+      state.currScopeKind = state.st->getCurrentScopeKind();
+
+      // Return to cached memory state from outer scope
+      state.memory.deallocMemory();
+   }
+
    std::string addDimsToType(std::string type, std::vector<Dim> dims, int currDim)
    {
       for (int i = currDim; i < dims.size(); i++)
@@ -38,7 +58,6 @@ namespace willow::parser
       // Get operand
       Symbol op1 = state.operandStack.top();
       state.operandStack.pop();
-
       std::cout << "Popping operand of unary operation " << operation << ": " << op1.address << std::endl;
 
       // If operand is pointer, get its value
@@ -74,6 +93,7 @@ namespace willow::parser
       // Get right operand
       Symbol op2 = state.operandStack.top();
       state.operandStack.pop();
+      std::cout << "Popping right operand of binary operation " << operation << ": " << op2.address << std::endl;
 
       if (state.memory.isPointer(op2.address))
       {
@@ -89,6 +109,7 @@ namespace willow::parser
       // Get left operand
       Symbol op1 = state.operandStack.top();
       state.operandStack.pop();
+      std::cout << "Popping left operand of binary operation " << operation << ": " << op1.address << std::endl;
 
       // If operand is pointer, get its value
       if (state.memory.isPointer(op1.address))
@@ -134,6 +155,7 @@ namespace willow::parser
          // Get value from string literal, removing quotations (")
          std::string filepath = state.operandStack.top().id.substr(1, state.operandStack.top().id.length() - 2);
          state.operandStack.pop();
+         std::cout << "Popping operand filepath in import: " << filepath << std::endl;
 
          assert(!state.filepathStack.empty());
 
@@ -180,12 +202,7 @@ namespace willow::parser
       {
          try
          {
-            // Create local scope
-            state.currScopeKind = symbols::LOCAL;
-            state.st->createScope(state.currScopeKind);
-
-            // Cache current memory state
-            state.memory.cacheCurrentMemstate(false);
+            enterScope(state);
          }
          catch (std::string msg)
          {
@@ -195,19 +212,14 @@ namespace willow::parser
    };
 
    template <>
-   struct action<t_braceclose>
+   struct action<a_close_scope>
    {
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
          try
          {
-            // Exit scope
-            state.st->exitScope();
-            state.currScopeKind = state.st->getCurrentScopeKind();
-
-            // Return to cached memory state from outer scope
-            state.memory.deallocMemory();
+            exitScope(state);
          }
          catch (std::string msg)
          {
@@ -216,25 +228,15 @@ namespace willow::parser
       }
    };
 
-   // Vars
+   // Variable declaration
 
    template <>
-   struct action<identifier>
+   struct action<a_s_var_id>
    {
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-         // TODO: THIS IS VERY SUS, CHECK OUT LATER
-         try
-         {
-            // Pushes operand if the identifier exists in symbol table
-            state.operandStack.push(state.st->lookup(in.string()));
-         }
-         catch (std::string msg)
-         {
-            // If it doesn't exist in symbol table yet, it pushes an operand without type or address
-            state.operandStack.push({in.string(), willow::symbols::NONE_TYPE});
-         }
+         state.currId = in.string();
       }
    };
 
@@ -255,6 +257,16 @@ namespace willow::parser
       static void apply(const ActionInput &in, State &state)
       {
          state.currType = in.string();
+
+         // Store variable at global memory segment, otherwise as local
+         int memSegment = state.currScopeKind == symbols::GLOBAL ? memory::GLOBAL : memory::LOCAL;
+
+         // Allocate memory for variable
+         std::string address = state.memory.allocMemory(state.sc, memSegment, state.currType, 1, false);
+
+         // Assign type, dimensions, and address to variable
+         std::cout << "pushing operand when defining an s_var_basic: " << address << std::endl;
+         state.operandStack.push({state.currId, state.currType, address});
       }
    };
 
@@ -264,7 +276,6 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-
          // Calculate how much to displace per dimension
          for (int i = state.currDims.size() - 2; i >= 0; i--)
          {
@@ -273,7 +284,7 @@ namespace willow::parser
 
          // Calculate total amount of entries in structure (array / matrix / etc.)
          int dims_size = 1;
-         for (Dim dim : state.operandStack.top().dims)
+         for (Dim dim : state.currDims)
          {
             dims_size *= dim.size;
          }
@@ -285,9 +296,8 @@ namespace willow::parser
          std::string address = state.memory.allocMemory(state.sc, memSegment, state.currType, dims_size, false);
 
          // Assign type, dimensions, and address to variable
-         state.operandStack.top().type = state.currType;
-         state.operandStack.top().dims = state.currDims;
-         state.operandStack.top().address = address;
+         std::cout << "pushing operand when defining an s_var: " << address << std::endl;
+         state.operandStack.push({state.currId, state.currType, address, state.currDims});
 
          // Clear currDims in state for next structured variable
          state.currDims.clear();
@@ -322,8 +332,7 @@ namespace willow::parser
          try
          {
             // Inserts current operand to symbol table
-            Symbol &operand = state.operandStack.top();
-            operand.type = state.currType;
+            const Symbol &operand = state.operandStack.top();
             state.st->insert(operand.id, operand.type, operand.address, operand.dims);
          }
          catch (std::string msg)
@@ -543,6 +552,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         std::cout << "Pushing operand of literal int " << in.string() << std::endl;
          state.operandStack.push({in.string(), "int", in.string()});
       }
    };
@@ -553,6 +563,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         std::cout << "Pushing operand of literal float " << in.string() << std::endl;
          state.operandStack.push({in.string(), "float", in.string()});
       }
    };
@@ -563,6 +574,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         std::cout << "Pushing operand of literal bool " << in.string() << std::endl;
          state.operandStack.push({in.string(), "bool", in.string()});
       }
    };
@@ -573,6 +585,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         std::cout << "Pushing operand of literal char " << in.string() << std::endl;
          state.operandStack.push({in.string(), "char", in.string()});
       }
    };
@@ -583,6 +596,7 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         std::cout << "Pushing operand of literal string " << in.string() << std::endl;
          state.operandStack.push({in.string(), "string", in.string()});
       }
    };
@@ -781,6 +795,7 @@ namespace willow::parser
          // If we don't assign a value, we pop operand and exit action
          if (state.operatorStack.empty() || state.operatorStack.top() != "=")
          {
+            std::cout << "Popping operand of var_def without assignment: " << state.operandStack.top().address << std::endl;
             state.operandStack.pop();
             return;
          }
@@ -792,10 +807,21 @@ namespace willow::parser
          // Get right operand
          Symbol op2 = state.operandStack.top();
          state.operandStack.pop();
+         std::cout << "Popping right operand of var_def assignment: " << op2.address << std::endl;
 
          // Get left operand (variable we are assigning to)
          Symbol op1 = state.operandStack.top();
          state.operandStack.pop();
+         std::cout << "Popping left operand of var_def assignment: " << op1.address << std::endl;
+
+         if (state.operandStack.empty())
+         {
+            std::cout << "var def assignment exiting with empty stack" << std::endl;
+         }
+         else
+         {
+            std::cout << "there's some leak somewhere, leaving this at top: " << state.operandStack.top().address << std::endl;
+         }
 
          if (state.memory.isPointer(op2.address))
          {
@@ -836,25 +862,37 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
-
-         // Get operator
-         std::string operation = state.operatorStack.top();
-         state.operatorStack.pop();
-
-         // Get right operand
-         Symbol op2 = state.operandStack.top();
-         state.operandStack.pop();
-
-         // Get left operand
-         Symbol op1 = state.operandStack.top();
-         state.operandStack.pop();
-
-         // Add dims to type string for error messages
-         std::string op1_type_with_dims = addDimsToType(op1.type, op1.dims, op1.currDimPosition);
-         std::string op2_type_with_dims = addDimsToType(op2.type, op2.dims, op2.currDimPosition);
-
          try
          {
+            // Get operator
+            std::string operation = state.operatorStack.top();
+            state.operatorStack.pop();
+
+            // Get right operand
+            Symbol op2 = state.operandStack.top();
+            state.operandStack.pop();
+            std::cout << "Popping right operand of assignment operation " << operation << ": " << op2.address << std::endl;
+
+            // Get left operand
+            Symbol op1 = state.operandStack.top();
+            state.operandStack.pop();
+            std::cout << "Popping left operand of assignment operation " << operation << ": " << op1.address << std::endl;
+
+            // Add dims to type string for error messages
+            std::string op1_type_with_dims = addDimsToType(op1.type, op1.dims, op1.currDimPosition);
+            std::string op2_type_with_dims = addDimsToType(op2.type, op2.dims, op2.currDimPosition);
+
+            if (state.memory.isPointer(op2.address))
+            {
+               // Get value from pointer address and store in temp
+               std::string valueAddress = state.memory.allocMemory(state.sc, memory::TEMP, op2.type, 1, false);
+               state.quadruples.push_back({"&get", op2.address, "", valueAddress});
+
+               // Replace operand with pointed value
+               op2.id = valueAddress;
+               op2.address = valueAddress;
+            }
+
             if (operation == "*=" || operation == "/=" || operation == "+=" || operation == "-=" || operation == "%=")
             {
                // Get operation to be executed before assignment (*, /, +, -, %)
@@ -863,7 +901,18 @@ namespace willow::parser
                std::string temp_type = state.sc.query(op1_type_with_dims, op2_type_with_dims, operation);
                std::string address = state.memory.allocMemory(state.sc, memory::TEMP, temp_type, 1, false);
 
-               state.quadruples.push_back({operation, op1.address, op2.address, address});
+               if (state.memory.isPointer(op1.address))
+               {
+                  // Get value from pointer address and store in temp
+                  std::string valueAddress = state.memory.allocMemory(state.sc, memory::TEMP, op1.type, 1, false);
+                  state.quadruples.push_back({"&get", op1.address, "", valueAddress});
+
+                  state.quadruples.push_back({operation, valueAddress, op2.address, address});
+               }
+               else
+               {
+                  state.quadruples.push_back({operation, op1.address, op2.address, address});
+               }
 
                op2.id = address;
                op2.address = address;
@@ -903,6 +952,7 @@ namespace willow::parser
          // Get resulting operand from expression
          Symbol expr_result = state.operandStack.top();
          state.operandStack.pop();
+         std::cout << "Popping operand of expression result in a1_conditional: " << expr_result.address << std::endl;
 
          // If expression result is not boolean, throw error
          if (expr_result.type != "bool")
@@ -975,6 +1025,7 @@ namespace willow::parser
          // Get resulting operand from expression
          Symbol expr_result = state.operandStack.top();
          state.operandStack.pop();
+         std::cout << "Popping operand of expression result in a2_while_loop: " << expr_result.address << std::endl;
 
          // If expression result is not boolean, throw error
          if (expr_result.type != "bool")
@@ -1020,6 +1071,17 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+
+         // Range left side
+         Symbol range_from = state.operandStack.top();
+         state.operandStack.pop();
+         std::cout << "Popping operand of range_from in a1_for_range: " << range_from.address << std::endl;
+
+         Symbol loop_iterator = state.operandStack.top(); // Doesn't need pop, we need it on a3
+
+         // Assign range left side to loop iterator
+         state.quadruples.push_back({"=", range_from.address, "", loop_iterator.address});
+
          // Push jump point before range target, after initializing iterator
          state.jumpStack.push(state.quadruples.size());
       }
@@ -1034,18 +1096,12 @@ namespace willow::parser
          // Get right operand
          Symbol op2 = state.operandStack.top();
          state.operandStack.pop();
+         std::cout << "Popping right operand of a2_for_range: " << op2.address << std::endl;
 
          // Get left operand
          Symbol op1 = state.operandStack.top();
          state.operandStack.pop();
-
-         // TODO: CHECK THIS OUT, KINDA SUS
-         // If the right operand didn't generate any quadruples, move jump point to right after
-         if (state.jumpStack.top() == state.quadruples.size())
-         {
-            state.jumpStack.pop();
-            state.jumpStack.push(state.quadruples.size() + 1);
-         }
+         std::cout << "Popping left operand of a2_for_range: " << op1.address << std::endl;
 
          // Check both range sides are integers
          if (op1.type != "int" || op2.type != "int")
@@ -1053,7 +1109,18 @@ namespace willow::parser
             throw pegtl::parse_error("Error: Expected int in for-loop range", in);
          }
 
+         std::cout << "for range got left operand with address " << op1.address << std::endl;
+         std::cout << "for range got right operand with address " << op2.address << std::endl;
+         if (state.operandStack.empty())
+         {
+            std::cout << "for range left operand stack empty " << std::endl;
+         }
+         else
+         {
+            std::cout << "for range left at top " << state.operandStack.top().address << std::endl;
+         }
          // Push operands back in their place
+         std::cout << "pushing operands of range: " << op1.address << " and " << op2.address << std::endl;
          state.operandStack.push(op1);
          state.operandStack.push(op2);
       }
@@ -1084,19 +1151,13 @@ namespace willow::parser
          // Range right side
          Symbol range_to = state.operandStack.top();
          state.operandStack.pop();
-
-         // Range left side
-         Symbol range_from = state.operandStack.top();
-         state.operandStack.pop();
+         std::cout << "Popping operand of right side of a2_for_loop: " << range_to.address << std::endl;
 
          Symbol loop_iterator = state.operandStack.top(); // Doesn't need pop, we need it on a3
 
-         // Assign range left side to loop iterator
-         state.quadruples.push_back({"=", range_from.address, "", loop_iterator.address});
-
          // Allocate boolean temp and check if our iterator <= range_to
          std::string address = state.memory.allocMemory(state.sc, memory::TEMP, "bool", 1, false);
-         state.quadruples.push_back({"<=", loop_iterator.address, range_to.address, address});
+         state.quadruples.push_back({"<", loop_iterator.address, range_to.address, address});
 
          // Prepare gotof for end of loop
          state.quadruples.push_back({"gotof", address, "", ""});
@@ -1113,9 +1174,14 @@ namespace willow::parser
          // Pop loop_iterator
          const Symbol &loop_iterator = state.operandStack.top();
          state.operandStack.pop();
+         std::cout << "Popping operand of loop_iterator in a3_for_loop: " << loop_iterator.address << std::endl;
 
          // Increase loop iterator by 1
          std::string address = state.memory.allocMemory(state.sc, memory::TEMP, "int", 1, false);
+
+         std::cout << "loop iterator address is " << loop_iterator.address << std::endl;
+         std::cout << "temp iterator is " << address << std::endl;
+
          state.quadruples.push_back({"+", loop_iterator.address, "1", address});
          state.quadruples.push_back({"=", address, "", loop_iterator.address});
 
@@ -1130,13 +1196,23 @@ namespace willow::parser
 
          // Fill in gotof to current position
          state.quadruples[for_false_jump].targetAddress = std::to_string(state.quadruples.size());
+
+         // Manually exit for scope
+         try
+         {
+            exitScope(state);
+         }
+         catch (std::string msg)
+         {
+            throw pegtl::parse_error(msg, in);
+         }
       }
    };
 
    // Arrays
 
    template <>
-   struct action<a_type_closearr>
+   struct action<a_type_closebracket>
    {
 
       template <typename ActionInput>
@@ -1151,7 +1227,38 @@ namespace willow::parser
 
          // Add dim to currDims
          state.currDims.push_back({dimSize, 1});
+         std::cout << "Popping operand of a_type_close_arr: " << state.operandStack.top().address << std::endl;
          state.operandStack.pop();
+      }
+   };
+
+   template <>
+   struct action<a_var_id>
+   {
+
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         try
+         {
+            state.operandStack.push(state.st->lookup(in.string()));
+            std::cout << "pushing var operand: " << state.operandStack.top().id << " " << state.operandStack.top().address << std::endl;
+         }
+         catch (std::string msg)
+         {
+            throw pegtl::parse_error(msg, in);
+         }
+      }
+   };
+
+   template <>
+   struct action<a_var_bracketopen>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+         // Push fake bottom
+         state.operatorStack.push("[");
       }
    };
 
@@ -1161,9 +1268,13 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+         // Pop fake bottom
+         state.operatorStack.pop();
+
          // Get value at index
          const Symbol &index_value = state.operandStack.top();
          state.operandStack.pop();
+         std::cout << "Popping operand of value at index in a_var_bracketclose: " << index_value.address << std::endl;
 
          // Check index is integer
          if (index_value.type != "int")
@@ -1174,6 +1285,7 @@ namespace willow::parser
          // Get variable we're indexing
          Symbol operand = state.operandStack.top();
          state.operandStack.pop();
+         std::cout << "Popping operand of variable we're indexing in a_var_bracketclose: " << operand.address << std::endl;
 
          // Check if the variable we're indexing is an array / current dimension is valid
          if (operand.dims.empty() || operand.currDimPosition >= operand.dims.size())
@@ -1195,6 +1307,7 @@ namespace willow::parser
             // Get running indexing
             Symbol runningIndexing = state.operandStack.top();
             state.operandStack.pop();
+            std::cout << "Popping operand of running index in a_var_bracketclose: " << runningIndexing.address << std::endl;
 
             // Add displacement to running indexing
             std::string address_tmp = address;
@@ -1203,6 +1316,7 @@ namespace willow::parser
          }
 
          // Push current displacement
+         std::cout << "pushing current displacement: " << address << std::endl;
          state.operandStack.push({address, "int", address});
 
          // Increase currDimPosition
@@ -1216,14 +1330,17 @@ namespace willow::parser
             state.quadruples.push_back({"&disp", address, operand.address, pointerAddress});
 
             // Remove running indexing sum from operand stack
+            std::cout << "Popping operand of running indexing sum in a_var_bracketclose: " << state.operandStack.top().address << std::endl;
             state.operandStack.pop();
 
             // Push indexed-value address
+            std::cout << "pushing operand indexed-value address: " << pointerAddress << std::endl;
             state.operandStack.push({pointerAddress, operand.type, pointerAddress});
          }
          else
          {
             // Push back in operand if more dims remain
+            std::cout << "pushing operand back in because more dims remain in array: " << operand.address << std::endl;
             state.operandStack.push(operand);
          }
       }
@@ -1235,12 +1352,29 @@ namespace willow::parser
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
+
+         // Clean displacement
+         Symbol operand = state.operandStack.top();
+         state.operandStack.pop();
+         std::cout << "popping operand in a_var_dot_id" << std::endl;
+
+         for (int i = 0; i < operand.currDimPosition; i++)
+         {
+            std::cout << "popping currdimposition in a_var_dot_id" << i << std::endl;
+            state.operandStack.pop();
+         }
+
+         // Push operand back in after cleanup
+         std::cout << "pushing operand back in after cleanup" << std::endl;
+         state.operandStack.push(operand);
+
          // TODO: CHECK LATER HOW TO HANDLE METHODS
          try
          {
             // Get operand
             Symbol operand = state.operandStack.top();
             state.operandStack.pop();
+            std::cout << "Popping operand of a_var_dotid: " << operand.address << std::endl;
 
             // Get class signature of operand
             ClassSignature var_class = state.classdir.lookup(operand.type);
@@ -1265,12 +1399,37 @@ namespace willow::parser
             state.quadruples.push_back({"&disp", std::to_string(attr.position), operand.address, pointerAddress});
 
             // Push indexed-value address
+            std::cout << "pushing operand indexed-value of object: " << pointerAddress << std::endl;
             state.operandStack.push({pointerAddress, attr.type, pointerAddress});
          }
          catch (std::string msg)
          {
             throw pegtl::parse_error(msg, in);
          }
+      }
+   };
+
+   template <>
+   struct action<var>
+   {
+      template <typename ActionInput>
+      static void apply(const ActionInput &in, State &state)
+      {
+
+         // Clean displacement
+         Symbol operand = state.operandStack.top();
+         state.operandStack.pop();
+         std::cout << "popping operand in var" << std::endl;
+
+         for (int i = 0; i < operand.currDimPosition; i++)
+         {
+            std::cout << "popping currdimposition in var" << i << std::endl;
+            state.operandStack.pop();
+         }
+
+         // Push operand back in after cleanup
+         std::cout << "pushing operand back in after cleanup" << std::endl;
+         state.operandStack.push(operand);
       }
    };
 
@@ -1295,6 +1454,7 @@ namespace willow::parser
          // Get attribute
          Symbol attrop = state.operandStack.top();
          state.operandStack.pop();
+         std::cout << "Popping operand of attribute in classattr: " << attrop.address << std::endl;
 
          Attribute attr;
 
@@ -1396,6 +1556,7 @@ namespace willow::parser
          state.quadruples.push_back(quad);
 
          // Push result to operand stack
+         std::cout << "pushing operand result of read func call: " << address << std::endl;
          state.operandStack.push({address, "string", address});
       }
    };
@@ -1409,6 +1570,7 @@ namespace willow::parser
          // Get operand
          Symbol operand = state.operandStack.top();
          state.operandStack.pop();
+         std::cout << "Popping operand of writeln_func_call: " << operand.address << std::endl;
 
          if (state.memory.isPointer(operand.address))
          {
@@ -1433,6 +1595,7 @@ namespace willow::parser
          // Get operand
          Symbol operand = state.operandStack.top();
          state.operandStack.pop();
+         std::cout << "Popping operand of length_func_call: " << operand.address << std::endl;
 
          // Check if operand has dims and the current dimension is valid
          if (operand.dims.size() == 0 || operand.currDimPosition >= operand.dims.size())
@@ -1441,10 +1604,11 @@ namespace willow::parser
          }
 
          // Store current dimension size in temp address
-         std::string valueAddress = state.memory.allocMemory(state.sc, memory::TEMP, "int", 1, false);
-         state.quadruples.push_back({"=", std::to_string(operand.dims[operand.currDimPosition].size), "", valueAddress});
+         std::string address = state.memory.allocMemory(state.sc, memory::TEMP, "int", 1, false);
+         state.quadruples.push_back({"=", std::to_string(operand.dims[operand.currDimPosition].size), "", address});
 
-         state.operandStack.push({valueAddress, "int", valueAddress});
+         std::cout << "pushing operand result of length func call: " << address << std::endl;
+         state.operandStack.push({address, "int", address});
       }
    };
 
@@ -1457,6 +1621,7 @@ namespace willow::parser
          // Get operand
          Symbol operand = state.operandStack.top();
          state.operandStack.pop();
+         std::cout << "Popping operand of write_func_call: " << operand.address << std::endl;
 
          if (state.memory.isPointer(operand.address))
          {

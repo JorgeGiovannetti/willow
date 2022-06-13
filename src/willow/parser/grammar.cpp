@@ -13,9 +13,8 @@ namespace willow::parser
     struct statement;
 
     struct a_open_scope : seps {};
-    struct block_noscopeopen : seq<t_braceopen, seps, star<statement>, t_braceclose> {};
-
-    struct identifier : t_id {};
+    struct a_close_scope : t_braceclose {};
+    struct block_noscopeopen : seq<t_braceopen, seps, star<statement>, a_close_scope> {};
     
     // Imports
 
@@ -25,9 +24,9 @@ namespace willow::parser
     // Type
 
     struct basic_type : sor<t_int, t_float, t_bool, t_char, t_string> {};
-    struct a_type_closearr : seps {};
+    struct a_type_closebracket : seps {};
     struct type : seq<sor<basic_type, t_id>> {};
-    struct structured_type : seq<type, star<t_bracketopen, seps, t_lit_int, a_type_closearr, t_bracketclose>> {};
+    struct structured_type : seq<type, star<t_bracketopen, seps, t_lit_int, a_type_closebracket, t_bracketclose>> {};
 
     // Literals
 
@@ -39,17 +38,19 @@ namespace willow::parser
     struct a_var_bracketclose : t_bracketclose {};
     struct a_var_dot : t_dot {};
     struct a_var_dotid : t_id {};
-    struct var : seq<sor<identifier, t_this>, star<sor<seq<a_var_bracketopen, expr, a_var_bracketclose>, seq<a_var_dot, a_var_dotid>>>> {};
+    struct a_var_id : t_id {};
+    struct var : seq<a_var_id, star<sor<seq<a_var_bracketopen, expr, a_var_bracketclose>, seq<a_var_dot, a_var_dotid>>>> {};
     struct s_var_basic_type : basic_type {};
-    struct s_var : seq<identifier, seps, t_colon, seps, structured_type> {};
-    struct s_var_basic : seq<identifier, seps, t_colon, seps, s_var_basic_type> {};
+    struct a_s_var_id : t_id {};
+    struct s_var : seq<a_s_var_id, seps, t_colon, seps, structured_type> {};
+    struct s_var_basic : seq<a_s_var_id, seps, t_colon, seps, s_var_basic_type> {};
     struct var_def : seq<s_var, opt<seps, t_assign, seps, expr>> {};
     struct var_def_stmt : seq<var_def, seps, t_semicolon> {};
 
     // Functions
 
     struct params_def : if_must<t_paropen, seps, opt<s_var_basic, seps, star<t_comma, seps, s_var_basic, seps>>, t_parclose> {};
-    struct funcdef : if_must<t_fn, sepp, identifier, a_open_scope, params_def, seps, opt<t_colon, seps, basic_type>, seps, block_noscopeopen> {};
+    struct funcdef : if_must<t_fn, sepp, t_id, a_open_scope, params_def, seps, opt<t_colon, seps, basic_type>, seps, block_noscopeopen> {};
     struct params : if_must<t_paropen, seps, opt<expr, seps, star<t_comma, seps, expr, seps>>, t_parclose> {};
     struct main_func : seq<t_fn, sepp, if_must<t_main, seps, t_paropen, seps, t_parclose, seps, block>> {};
     struct func_call : seq<var, params> {};
@@ -69,7 +70,7 @@ namespace willow::parser
 
     struct a1_classdef : t_id {};
     struct a2_classdef : t_id {};
-    struct classdef : if_must<t_class, sepp, a1_classdef, seps, opt<t_arrow, seps, a2_classdef, seps>, t_braceopen, a_open_scope, classmembers, t_braceclose> {};
+    struct classdef : if_must<t_class, sepp, a1_classdef, seps, opt<t_arrow, seps, a2_classdef, seps>, t_braceopen, a_open_scope, classmembers, t_braceclose, a_close_scope> {};
 
     // Conditionals
 
@@ -92,8 +93,8 @@ namespace willow::parser
     
     struct a1_for_loop : seps {};
     struct a2_for_loop : seps {};
-    struct a3_for_loop : seps {};
-    struct for_loop : if_must<t_for, seps, t_paropen, a_open_scope, seps, s_var, a1_for_loop, t_arrow, seps, for_range, a2_for_loop, t_parclose, seps, block_noscopeopen, a3_for_loop> {};
+    struct a3_for_loop : t_braceclose {};
+    struct for_loop : if_must<t_for, seps, t_paropen, a_open_scope, seps, s_var, a1_for_loop, t_arrow, seps, for_range, a2_for_loop, t_parclose, seps, seq<t_braceopen, seps, star<statement>, a3_for_loop>> {};
     struct loops : sor<while_loop, for_loop> {};
 
     // Statements
@@ -138,7 +139,7 @@ namespace willow::parser
 
     // Block
 
-    struct block : seq<t_braceopen, a_open_scope, star<statement>, t_braceclose> {};
+    struct block : seq<t_braceopen, a_open_scope, star<statement>, a_close_scope> {};
 
     // Entry Point
 

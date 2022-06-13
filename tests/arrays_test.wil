@@ -1,10 +1,26 @@
-a: int;
 
 fn main() {
     arr: int[5][3];
+    m: int = length(arr);
+    n: int = length(arr[0]);
 
-    for(i: int -> 0..5) {
-        writeln(i);
+    counter: int = 0;
+
+    for(i: int -> 0..m) {
+        for(j: int -> 0..n) {
+            arr[i][j] = counter;
+            counter += 1;
+        }
+    }
+    
+    arr[0][0] = arr[0][1];
+
+    for(i: int -> 0..m) {
+        for(j: int -> 0..n) {
+            arr[i][j] *= 5 + 3;
+            write(arr[i][j] + " ");
+        }
+        writeln("");
     }
 
 }
