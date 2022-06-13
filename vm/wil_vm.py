@@ -12,9 +12,11 @@ if len(sys.argv) < 2:
 filename = sys.argv[1]
 
 print('Executing from obj file', filename)
+print('')
 
 memory = Memory()
 is_running = True
+curr_params = []
 
 # Load quadruples
 
@@ -51,12 +53,27 @@ def ver(quad):
 
 # Function Operations
 def gosub(quad):
-    target = int(funcDir[quad[3]])
+    global curr_params
+
+    target = int(funcDir[quad[3]].location)
+
+    func_params = funcDir[quad[3]].params
 
     memory.call_stack.append(memory.instruction_pointer)
     memory.memory_stack.append(memory.init_nonglobal_memory())
 
+    while len(func_params) > 0:
+        memory.assign_to_address(curr_params.pop(), func_params.pop())
+
     memory.instruction_pointer = target
+
+def param(quad):
+    global curr_params
+
+    param = utils.get_data(quad[1], memory)
+    curr_params.append(param)
+
+    memory.instruction_pointer += 1
 
 def endfunc(quad):
     memory.instruction_pointer = memory.call_stack.pop()
@@ -258,6 +275,7 @@ operations = {
     'end': end,
     'ver': ver,
     'gosub': gosub,
+    'param': param,
     'endfunc': endfunc,
     '&disp': ptr_displace,
     '&save': ptr_save,

@@ -16,6 +16,10 @@ def parse_quadruples(quadruples: [], line: str):
     quadruple[quad_index] = temp_str.replace('\n', '')
     quadruples.append(quadruple)
 
+class Func():
+    def __init__(self):
+        self.location = -1
+        self.params = []
 
 def parse_wol(filename: str):
 
@@ -33,8 +37,12 @@ def parse_wol(filename: str):
                 c = line.split(' ')
                 classDir[c[0]] = c[1]
             elif position == 1:
-                f = line.split(' ')
-                funcDir[f[0]] = f[1]
+                f = line.replace('\n', '').split(' ')
+                func_tmp = Func()
+                func_tmp.location = f[1]
+                func_tmp.params = f[2:]
+                funcDir[f[0]] = func_tmp
+
             else:        
                 parse_quadruples(quadruples, line)
 

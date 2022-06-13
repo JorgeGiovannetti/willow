@@ -1847,6 +1847,8 @@ namespace willow::parser
                throw pegtl::parse_error("Provided parameters do not match function signature", in);
             }
 
+            state.quadruples.push_back({"param", param.address, "", currFunc.params[currParam].address});
+
             // Increase currParam for next param
             currParam++;
          }

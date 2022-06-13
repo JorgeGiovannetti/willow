@@ -28,7 +28,12 @@ namespace willow::parser
         // Output functions
         for (const auto &[key, value] : st.funcdir.getFunctions())
         {
-            file << key << " " << value.location << std::endl;
+            file << key << " " << value.location;
+            for(const auto& param : value.params)
+            {
+                file << " " << param.address;
+            }
+            file << std::endl;
         }
 
         // Separator
