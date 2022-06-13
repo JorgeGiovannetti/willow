@@ -26,5 +26,6 @@ fn find(n: int) {
 }
 
 fn main() {
+    find(5);
     find(246);
 }
