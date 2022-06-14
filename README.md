@@ -12,7 +12,7 @@ A concise, statically typed, object-oriented programming language
 - [x] Basic Variable Semantics: Semantic Considerations Table
 - [x] Code Generation of Arithmetic Expressions and Sequential Statements: Assignment, Input, etc.
 - [x] Code Generation of Conditional Statements: Decisions/Loops
-- [ ] Code Generation of Functions
+- [x] Code Generation of Functions
 - [x] Runtime Memory Mapping for Virtual Machine
 - [x] Virtual Machine: Arithmetic Expression and Sequential Statement Execution
 - [x] Code Generation for Arrays/Structured Types

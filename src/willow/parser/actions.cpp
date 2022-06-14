@@ -1190,7 +1190,6 @@ namespace willow::parser
    template <>
    struct action<a_type_closebracket>
    {
-
       template <typename ActionInput>
       static void apply(const ActionInput &in, State &state)
       {
