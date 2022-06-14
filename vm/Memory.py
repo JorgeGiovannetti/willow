@@ -6,6 +6,7 @@ class Memory:
         self.segment_names = ['global', 'local', 'temp']
         self.instruction_pointer = 0
         self.call_stack = []
+        self.stack_pointer = 0
         self.memory_stack = [self.init_nonglobal_memory()]
 
     def add_type(self, type_name: str):
@@ -42,8 +43,8 @@ class Memory:
             self.extend_memory(self.global_memory, type_name, internal_address)
             self.global_memory[type_name][internal_address] = data
         else:
-            self.extend_memory(self.memory_stack[len(self.memory_stack) - 1][segment-1], type_name, internal_address)
-            self.memory_stack[len(self.memory_stack) - 1][segment-1][type_name][internal_address] = data
+            self.extend_memory(self.memory_stack[self.stack_pointer][segment-1], type_name, internal_address)
+            self.memory_stack[self.stack_pointer][segment-1][type_name][internal_address] = data
     
     def get_data_from_address(self, address: str):
         address = self.get_address(address)
@@ -55,8 +56,8 @@ class Memory:
             self.extend_memory(self.global_memory, type_name, internal_address)
             return self.global_memory[type_name][internal_address]
         else:
-            self.extend_memory(self.memory_stack[len(self.memory_stack) - 1][segment-1], type_name, internal_address)
-            return self.memory_stack[len(self.memory_stack) - 1][segment-1][type_name][internal_address]
+            self.extend_memory(self.memory_stack[self.stack_pointer][segment-1], type_name, internal_address)
+            return self.memory_stack[self.stack_pointer][segment-1][type_name][internal_address]
 
     def get_address(self, address: str):
         return int(address[1:])

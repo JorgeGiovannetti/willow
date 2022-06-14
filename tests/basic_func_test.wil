@@ -14,7 +14,7 @@ fn paramTest(a: int, b: int): int {
     writeln("Param a = " + a);
     writeln("Param b = " + b);
 
-    return 0;
+    return 10;
 }
 
 fn main() {

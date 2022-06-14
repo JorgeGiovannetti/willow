@@ -58,13 +58,14 @@ def gosub(quad):
     target = int(funcDir[quad[3]].location)
     func_params = funcDir[quad[3]].params
 
+    # Store current instruction pointer
+    memory.call_stack.append(memory.instruction_pointer)
+
     memory.memory_stack.append(memory.init_nonglobal_memory())
     
     while len(func_params) > 0:
         memory.assign_to_address(curr_params.pop(), func_params.pop())
 
-    # Store current instruction pointer
-    memory.call_stack.append(memory.instruction_pointer)
 
     # Set instruction pointer to function begin
     memory.instruction_pointer = target
