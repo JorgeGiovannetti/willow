@@ -12,14 +12,14 @@ A concise, statically typed, object-oriented programming language
 - [x] Basic Variable Semantics: Semantic Considerations Table
 - [x] Code Generation of Arithmetic Expressions and Sequential Statements: Assignment, Input, etc.
 - [x] Code Generation of Conditional Statements: Decisions/Loops
-- [ ] Code Generation of Functions
+- [x] Code Generation of Functions
 - [x] Runtime Memory Mapping for Virtual Machine
-- [ ] Virtual Machine: Arithmetic Expression and Sequential Statement Execution
-- [ ] Code Generation for Arrays/Structured Types
-- [ ] Virtual Machine: Conditional Statement Execution
-- [ ] Documentation (1st Draft)
-- [ ] Code Generation and Virtual Machine
-- [ ] Final Compiler and Documentation
+- [x] Virtual Machine: Arithmetic Expression and Sequential Statement Execution
+- [x] Code Generation for Arrays/Structured Types
+- [x] Virtual Machine: Conditional Statement Execution
+- [x] Documentation (1st Draft)
+- [x] Code Generation and Virtual Machine
+- [x] Final Compiler and Documentation
 
 ## Requirements
 This project requires C++17, supporting the following compilers:
