@@ -12,15 +12,20 @@ if len(sys.argv) < 2:
 filename = sys.argv[1]
 
 print('Executing from obj file', filename)
+print('')
 
 memory = Memory()
 is_running = True
+curr_params = []
 
 # Load quadruples
 
-quadruples = parse_wol(filename)
+classDir, funcDir, quadruples = parse_wol(filename)
 
-# Operations
+for key in classDir:
+    memory.add_type(key)
+
+# General Operations
 
 def goto(quad):
     memory.instruction_pointer = int(quad[3])
@@ -46,6 +51,41 @@ def ver(quad):
     
     memory.instruction_pointer += 1
 
+# Function Operations
+def gosub(quad):
+    global curr_params
+
+    target = int(funcDir[quad[3]].location)
+    func_params = funcDir[quad[3]].params
+
+    # Store current instruction pointer
+    memory.call_stack.append(memory.instruction_pointer)
+
+    memory.memory_stack.append(memory.init_nonglobal_memory())
+    
+    while len(func_params) > 0:
+        memory.assign_to_address(curr_params.pop(), func_params.pop())
+
+
+    # Set instruction pointer to function begin
+    memory.instruction_pointer = target
+
+def param(quad):
+    global curr_params
+
+    param = utils.get_data(quad[1], memory)
+    curr_params.append(param)
+
+    memory.instruction_pointer += 1
+
+def endfunc(quad):
+    memory.instruction_pointer = memory.call_stack.pop()
+    memory.memory_stack.pop()
+    
+    memory.instruction_pointer += 1
+
+# Pointer Operations
+
 def ptr_displace(quad):
     op1 = utils.get_data(quad[1], memory)
     op2 = memory.get_address(quad[2])
@@ -61,43 +101,35 @@ def ptr_displace(quad):
 
 def ptr_save(quad):
     address = utils.get_data(quad[3], memory)
-
     data = utils.get_data(quad[1], memory)
-
-    print('ptr_save', data)
-
     memory.assign_to_address(data, address)
 
     memory.instruction_pointer += 1
 
 def ptr_get(quad):
     address = utils.get_data(quad[1], memory)
-
     data = utils.get_data(address, memory)
-
     memory.assign_to_address(data, quad[3])
 
     memory.instruction_pointer += 1
 
+# I/O Operations
+
 def writeln(quad):
     data = utils.get_data(quad[3], memory)
-
     print(data)
 
     memory.instruction_pointer += 1
 
 def write(quad):
     data = utils.get_data(quad[3], memory)
-
     print(data, end='')
 
     memory.instruction_pointer += 1
 
 def read(quad):
     data = input()
-
     casted_data = utils.cast_to_type(data, memory.typename_from_address(quad[3]))
-
     memory.assign_to_address(casted_data, quad[3])
 
     memory.instruction_pointer += 1
@@ -142,6 +174,10 @@ def add(quad):
     op1 = utils.get_data(quad[1], memory)
     op2 = utils.get_data(quad[2], memory)
     
+    if type(op1) == int and type(op2) == str:
+        op1 = str(op1)
+    elif type(op1) == str and type(op2) == int:
+        op2 = str(op2)
     data = op1 + op2
     
     memory.assign_to_address(data, quad[3])
@@ -241,6 +277,9 @@ operations = {
     'gotof': gotof,
     'end': end,
     'ver': ver,
+    'gosub': gosub,
+    'param': param,
+    'endfunc': endfunc,
     '&disp': ptr_displace,
     '&save': ptr_save,
     '&get': ptr_get,

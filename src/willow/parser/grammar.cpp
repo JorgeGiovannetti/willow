@@ -12,10 +12,11 @@ namespace willow::parser
     struct expr;
     struct statement;
 
-    struct a_open_scope : seps {};
-    struct block_noscopeopen : seq<t_braceopen, seps, star<statement>, t_braceclose> {};
-
     struct identifier : t_id {};
+
+    struct a_open_scope : seps {};
+    struct a_close_scope : t_braceclose {};
+    struct block_noscopeopen : seq<t_braceopen, seps, star<statement>, a_close_scope> {};
     
     // Imports
 
@@ -25,9 +26,9 @@ namespace willow::parser
     // Type
 
     struct basic_type : sor<t_int, t_float, t_bool, t_char, t_string> {};
-    struct a_type_closearr : seps {};
+    struct a_type_closebracket : seps {};
     struct type : seq<sor<basic_type, t_id>> {};
-    struct structured_type : seq<type, star<t_bracketopen, seps, t_lit_int, a_type_closearr, t_bracketclose>> {};
+    struct structured_type : seq<type, star<t_bracketopen, seps, t_lit_int, a_type_closebracket, t_bracketclose>> {};
 
     // Literals
 
@@ -38,7 +39,9 @@ namespace willow::parser
     struct a_var_bracketopen : t_bracketopen {};
     struct a_var_bracketclose : t_bracketclose {};
     struct a_var_dot : t_dot {};
-    struct var : seq<sor<identifier, t_this>, star<sor<seq<a_var_bracketopen, expr, a_var_bracketclose>, seq<t_dot, identifier>>>> {};
+    struct a_var_dotid : identifier {};
+    struct a_var_id : identifier {};
+    struct var : seq<a_var_id, star<sor<seq<a_var_bracketopen, expr, a_var_bracketclose>, seq<a_var_dot, a_var_dotid>>>> {};
     struct s_var_basic_type : basic_type {};
     struct s_var : seq<identifier, seps, t_colon, seps, structured_type> {};
     struct s_var_basic : seq<identifier, seps, t_colon, seps, s_var_basic_type> {};
@@ -47,24 +50,37 @@ namespace willow::parser
 
     // Functions
 
-    struct params_def : if_must<t_paropen, seps, opt<s_var_basic, seps, star<t_comma, seps, s_var_basic, seps>>, t_parclose> {};
-    struct funcdef : if_must<t_fn, sepp, identifier, a_open_scope, params_def, seps, opt<t_colon, seps, basic_type>, seps, block_noscopeopen> {};
-    struct params : if_must<t_paropen, seps, opt<expr, seps, star<t_comma, seps, expr, seps>>, t_parclose> {};
+    struct a_params_def : seps {};
+    struct params_def : if_must<t_paropen, seps, opt<s_var_basic, a_params_def, star<t_comma, seps, s_var_basic, a_params_def>>, t_parclose> {};
+    
+    struct a1_funcdef : seps {};
+    struct a2_funcdef : seps {};
+    struct funcdef : if_must<t_fn, sepp, identifier, a1_funcdef, params_def, seps, opt<t_colon, seps, basic_type, a2_funcdef>, block_noscopeopen> {};
+    
+    struct a_params : seps {};
+    struct params : if_must<t_paropen, seps, opt<expr, a_params, star<t_comma, seps, expr, a_params>>, t_parclose> {};
+    
+    struct a1_func_call : seps {};
+    struct func_call : seq<identifier, a1_func_call, params> {};
+    
     struct main_func : seq<t_fn, sepp, if_must<t_main, seps, t_paropen, seps, t_parclose, seps, block>> {};
-    struct func_call : seq<var, params> {};
     struct read_func_call : if_must<t_read, t_paropen, t_parclose> {};
     struct write_func_call : if_must<t_write, t_paropen, expr, t_parclose> {};
     struct writeln_func_call : if_must<t_writeln, t_paropen, expr, t_parclose> {};
-    struct funcs : seq<sor<read_func_call, writeln_func_call, write_func_call, func_call>, t_semicolon> {};
+    struct length_func_call : if_must<t_length, t_paropen, expr, t_parclose> {};
+    struct builtin_func_call : sor<read_func_call, length_func_call> {};
+    struct funcs : if_must<sor<writeln_func_call, write_func_call, builtin_func_call, func_call>, seps, t_semicolon> {};
 
     // Classes
 
     struct memberaccess : sor<one<'+'>, one<'-'>> {};
-    struct classattr : seq<memberaccess, seps, var_def_stmt> {};
+    struct classattr : seq<memberaccess, seps, s_var_basic, seps, t_semicolon> {};
     struct classmethod : seq<memberaccess, seps, funcdef> {};
     struct classmembers : seq<star<classattr, seps>, star<classmethod, seps>> {};
 
-    struct classdef : if_must<t_class, sepp, identifier, seps, opt<t_arrow, seps, identifier, seps>, t_braceopen, a_open_scope, classmembers, t_braceclose> {};
+    struct a1_classdef : identifier {};
+    struct a2_classdef : identifier {};
+    struct classdef : if_must<t_class, sepp, a1_classdef, seps, opt<t_arrow, seps, a2_classdef, seps>, t_braceopen, a_open_scope, classmembers, a_close_scope> {};
 
     // Conditionals
 
@@ -81,13 +97,14 @@ namespace willow::parser
     struct a3_while_loop : seps {};
     struct while_loop : if_must<t_while, seps, t_paropen, a1_while_loop, expr, seps, t_parclose, a2_while_loop, block, a3_while_loop> {};
     
-    struct a1_for_range : seps {};
-    struct for_range : seq<expr, t_rangedot, expr, a1_for_range> {};
+    struct a1_for_range : t_rangedot {};
+    struct a2_for_range : seps {};
+    struct for_range : seq<expr, a1_for_range, expr, a2_for_range> {};
     
     struct a1_for_loop : seps {};
     struct a2_for_loop : seps {};
-    struct a3_for_loop : seps {};
-    struct for_loop : if_must<t_for, seps, t_paropen, a_open_scope, seps, s_var, a1_for_loop, t_arrow, seps, for_range, a2_for_loop, t_parclose, seps, block_noscopeopen, a3_for_loop> {};
+    struct a3_for_loop : t_braceclose {};
+    struct for_loop : if_must<t_for, seps, t_paropen, a_open_scope, seps, s_var, a1_for_loop, t_arrow, seps, for_range, a2_for_loop, t_parclose, seps, seq<t_braceopen, seps, star<statement>, a3_for_loop>> {};
     struct loops : sor<while_loop, for_loop> {};
 
     // Statements
@@ -107,7 +124,7 @@ namespace willow::parser
     struct expr_parclose : t_parclose {};
 
     struct a1_expr_L1 : seps{};
-    struct expr_L1 : seq<sor<seq<expr_paropen, seps, expr, seps, expr_parclose>, seq<at<func_call>, func_call>, var, literal, read_func_call>, seps> {};
+    struct expr_L1 : seq<sor<builtin_func_call, seq<at<func_call>, func_call>, var, literal, seq<expr_paropen, seps, expr, seps, expr_parclose>>, seps> {};
 
     struct a1_expr_L2 : seps{};
     struct expr_L2 : seq<opt<t_not>, expr_L1, a1_expr_L2> {};
@@ -132,11 +149,11 @@ namespace willow::parser
 
     // Block
 
-    struct block : seq<t_braceopen, a_open_scope, star<statement>, t_braceclose> {};
+    struct block : seq<t_braceopen, a_open_scope, star<statement>, a_close_scope> {};
 
     // Entry Point
 
-    struct top_levels : sor<var_def_stmt, main_func, funcdef, classdef> {};
+    struct top_levels : sor<var_def_stmt, funcs, main_func, funcdef, classdef> {};
     struct a_eof : eof {};
     struct grammar : must<seps, sor<seq<imports, star<top_levels, seps>>, plus<top_levels, seps>>, seps, a_eof> {};
     struct main_grammar : grammar {};

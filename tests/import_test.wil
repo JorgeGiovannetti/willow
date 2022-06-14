@@ -5,5 +5,7 @@ import (
 fn main() {
     x: int = 5;
 
-    x *= 3 - 1;
+    x *= a_import_var - b_import_var;
+
+    writeln(x);
 }

@@ -1,10 +1,9 @@
-#pragma once
+#ifndef TYPE_MANAGER_HPP
+#define TYPE_MANAGER_HPP
 
 #include <string>
 #include <vector>
 #include <unordered_map>
-
-#include "willow/symbols/symbol_table.hpp"
 
 namespace willow::semantics
 {
@@ -13,6 +12,7 @@ namespace willow::semantics
     public:
         TypeManager();
         void newType(const std::string &type_name, const int &size);
+        int increaseSize(const std::string &type_name, const int &size);
         std::string getType(int type_code);
         int getType(std::string type_name);
         int getTypeSize(std::string type_name);
@@ -24,3 +24,5 @@ namespace willow::semantics
         std::vector<int> typeSize;
     };
 }
+
+#endif

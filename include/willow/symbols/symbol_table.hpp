@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SYMBOL_TABLE_HPP
+#define SYMBOL_TABLE_HPP
 
 #include <memory>
 #include <unordered_map>
@@ -20,10 +21,11 @@ namespace willow::symbols
 
     static const std::string NONE_TYPE = "none";
 
-   struct Dim {
-      int size;
-      int displacement_size;
-   };
+    struct Dim
+    {
+        int size;
+        int displacement_size;
+    };
 
     struct Symbol
     {
@@ -55,10 +57,12 @@ namespace willow::symbols
 
         Symbol lookup(std::string id);
         void insert(std::string id, std::string type, std::string address, std::vector<Dim> dims);
+        void add_func_return(std::string id, std::string type, std::string address, std::vector<Dim> dims);
         std::shared_ptr<Scope> createScope(ScopeKind);
         void setScope(std::shared_ptr<Scope>);
         void exitScope();
         void deleteScope(std::shared_ptr<Scope>);
+        ScopeKind getCurrentScopeKind();
 
     private:
         size_t scopeCounter;
@@ -68,3 +72,5 @@ namespace willow::symbols
         SymbolTable();
     };
 }
+
+#endif

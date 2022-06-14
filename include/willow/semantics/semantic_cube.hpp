@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SEMANTIC_CUBE_HPP
+#define SEMANTIC_CUBE_HPP
 
 #include <string>
 #include <vector>
@@ -18,10 +19,12 @@ namespace willow::semantics
         int getType(std::string type_name);
         int getTypeSize(std::string type_name);
         int getTypeSize(int type_code);
+        TypeManager typeManager;
 
     private:
         std::vector<std::vector<std::vector<int>>> semanticMapping;
-        TypeManager typeManager;
         std::unordered_map<std::string, int> operatorMap;
     };
 }
+
+#endif

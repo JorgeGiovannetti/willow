@@ -1,0 +1,21 @@
+class Vector2 {
+    + x: int;
+    + y: int;
+}
+
+class Vector3 -> Vector2 {
+    + z: int;
+}
+
+fn main() {
+    v: Vector3;
+
+    v.x = 5;
+    v.y = 4;
+    v.z = 3;
+
+    sumOfComponents: int = v.x + v.y + v.z;
+
+    write("Sum of components: ");
+    writeln(sumOfComponents);
+}

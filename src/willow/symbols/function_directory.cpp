@@ -1,6 +1,6 @@
 #include <string>
 
-#include <willow/symbols/function_directory.hpp>
+#include "willow/symbols/function_directory.hpp"
 
 namespace willow::symbols
 {
@@ -22,5 +22,45 @@ namespace willow::symbols
         }
 
         return functions[id];
+    }
+
+    void FunctionDirectory::addParam(willow::semantics::TypeManager tm, std::string id, Symbol param)
+    {
+        if (!functions.count(id))
+        {
+            throw std::string("Function with identifier " + id + " does not exist");
+        }
+
+        functions[id].params.push_back(param);
+    }
+
+    void FunctionDirectory::addReturnAddress(std::string id, std::string address)
+    {
+        if (!functions.count(id))
+        {
+            throw std::string("Function with identifier " + id + " does not exist");
+        }
+
+        functions[id].global_address = address;
+    }
+
+    void FunctionDirectory::addReturnType(willow::semantics::TypeManager tm, std::string id, std::string return_type)
+    {
+        if (!functions.count(id))
+        {
+            throw std::string("Function with identifier " + id + " does not exist");
+        }
+
+        if (functions[id].return_type != "none")
+        {
+            throw std::string("Cannot redeclare return type for function " + id);
+        }
+
+        functions[id].return_type = return_type;
+    }
+
+    std::unordered_map<std::string, FunctionSignature> FunctionDirectory::getFunctions()
+    {
+        return functions;
     }
 }

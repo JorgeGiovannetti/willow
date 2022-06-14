@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-#include <willow/semantics/semantic_cube.hpp>
+#include "willow/semantics/semantic_cube.hpp"
 
 namespace willow::semantics
 {

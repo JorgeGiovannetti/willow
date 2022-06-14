@@ -1,1 +1,3 @@
 b_import_var: int = 1;
+
+writeln("Hi this is file b!");

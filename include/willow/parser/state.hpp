@@ -1,4 +1,5 @@
-#pragma once
+#ifndef STATE_HPP
+#define STATE_HPP
 
 #include <iostream>
 #include <stack>
@@ -29,11 +30,21 @@ namespace willow::parser
         willow::symbols::ClassDirectory classdir;
         willow::memory::MemoryManager memory;
         std::vector<willow::symbols::Dim> currDims;
+        std::string currId;
         std::string currType;
-
-        bool isInFunction;
-        bool isInClass;
+        std::string currMemberAccess;
+        
+        std::stack<willow::symbols::FunctionSignature> currFuncCall;
+        std::stack<int> currParam;
+        
+        std::string isInClass;
+        std::string isInFunction;
+        int functionReturns = 0; // 0 = no return, 1 = return may not happen, 2 = returns nicely
+        int mainStart = -1;
+        int mainEnd = -1;
 
         void displayQuadruples();
     };
 }
+
+#endif
