@@ -19,7 +19,7 @@ A concise, statically typed, object-oriented programming language
 - [x] Virtual Machine: Conditional Statement Execution
 - [x] Documentation (1st Draft)
 - [x] Code Generation and Virtual Machine
-- [ ] Final Compiler and Documentation
+- [x] Final Compiler and Documentation
 
 ## Requirements
 This project requires C++17, supporting the following compilers:
