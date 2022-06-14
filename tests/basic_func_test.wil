@@ -1,4 +1,4 @@
-fn myFunc() {
+fn myFact() {
     writeln("Hello myFact!");
 
     n: int = 5;
@@ -10,17 +10,21 @@ fn myFunc() {
     writeln("myFact result: " + result);
 }
 
-fn paramTest(a: int, b: int) {
+fn paramTest(a: int, b: int): int {
     writeln("Param a = " + a);
     writeln("Param b = " + b);
+
+    return 0;
 }
 
 fn main() {
     writeln("I'm in main right now!");
 
-    myFunc();
+    myFact();
     
-    paramTest(5, 3);
+    x: int = paramTest(5, 3);
+
+    writeln("x = " + x);
 
     writeln("I'm out of the function right now!");
 }

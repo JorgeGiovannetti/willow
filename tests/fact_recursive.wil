@@ -1,9 +1,10 @@
 
-fn fact_recursive(n: int) {
+fn fact_recursive(n: int): int {
     if(n == 1 or n == 2) {
         return n;
     }
-    return n * fact_recursive(n - 1);
+
+    return fact_recursive(n - 1) * n;
 }
 
 fn main() {

@@ -51,6 +51,17 @@ namespace willow::symbols
         currentScope->symbols[id] = {id, type, address, dims};
     }
 
+    void SymbolTable::add_func_return(std::string id, std::string type, std::string address, std::vector<Dim> dims)
+    {
+        id = "_" + id;
+        if (globalScope->symbols.count(id))
+        {
+            throw std::string("function return " + id + " is already defined");
+        }
+
+        globalScope->symbols[id] = {id, type, address, dims};
+    }
+
     std::shared_ptr<Scope> SymbolTable::createScope(ScopeKind scopeKind)
     {
         if (scopeKind == GLOBAL)

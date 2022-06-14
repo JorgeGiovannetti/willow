@@ -39,6 +39,7 @@ namespace willow::parser
         
         std::string isInClass;
         std::string isInFunction;
+        int functionReturns = 0; // 0 = no return, 1 = return may not happen, 2 = returns nicely
         int mainStart = -1;
         int mainEnd = -1;
 

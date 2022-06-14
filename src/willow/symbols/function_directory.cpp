@@ -30,9 +30,20 @@ namespace willow::symbols
         {
             throw std::string("Function with identifier " + id + " does not exist");
         }
-        
+
         functions[id].params.push_back(param);
     }
+
+    void FunctionDirectory::addReturnAddress(std::string id, std::string address)
+    {
+        if (!functions.count(id))
+        {
+            throw std::string("Function with identifier " + id + " does not exist");
+        }
+
+        functions[id].global_address = address;
+    }
+
     void FunctionDirectory::addReturnType(willow::semantics::TypeManager tm, std::string id, std::string return_type)
     {
         if (!functions.count(id))

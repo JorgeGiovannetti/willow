@@ -1,7 +1,7 @@
 #include <iostream>
 #include <text_table/text_table.hpp>
 
-#include <willow/willow.hpp>
+#include "willow/parser/state.hpp"
 
 using willow::codegen::Quadruple;
 using willow::symbols::SymbolTable;
@@ -13,7 +13,7 @@ namespace willow::parser
     {
         currScopeKind = willow::symbols::LOCAL;
         st = SymbolTable::instance();
-        isInFunction = false;
+        isInFunction = "";
     }
 
     void State::displayQuadruples()

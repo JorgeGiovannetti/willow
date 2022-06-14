@@ -57,6 +57,7 @@ namespace willow::symbols
 
         Symbol lookup(std::string id);
         void insert(std::string id, std::string type, std::string address, std::vector<Dim> dims);
+        void add_func_return(std::string id, std::string type, std::string address, std::vector<Dim> dims);
         std::shared_ptr<Scope> createScope(ScopeKind);
         void setScope(std::shared_ptr<Scope>);
         void exitScope();
